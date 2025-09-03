@@ -157,7 +157,7 @@ const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
         
         console.log('[PUT /pet/[id]] Pet updated successfully:', pet.id);
         return res.status(200).json(pet);
-      } catch (prismaError: any) {
+      } catch (prismaError: Error) {
         console.error('[PUT /pet/[id]] Prisma update error:', prismaError);
         
         if (prismaError.code === 'P2002') {
