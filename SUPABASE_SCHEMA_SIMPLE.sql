@@ -38,7 +38,7 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Users table
 CREATE TABLE IF NOT EXISTS "User" (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     "fullName" VARCHAR(255) NOT NULL,
     "profilePicture" TEXT,
     gender VARCHAR(50) NOT NULL,
@@ -53,8 +53,8 @@ CREATE TABLE IF NOT EXISTS "User" (
 
 -- Pets table
 CREATE TABLE IF NOT EXISTS "Pet" (
-    id SERIAL PRIMARY KEY,
-    "userId" INTEGER NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "userId" UUID NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     "petPicture" TEXT,
     birthdate TIMESTAMP NOT NULL,
@@ -67,9 +67,9 @@ CREATE TABLE IF NOT EXISTS "Pet" (
 
 -- Tasks table
 CREATE TABLE IF NOT EXISTS "Task" (
-    id SERIAL PRIMARY KEY,
-    "userId" INTEGER NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
-    "petId" INTEGER NOT NULL REFERENCES "Pet"(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "userId" UUID NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
+    "petId" UUID NOT NULL REFERENCES "Pet"(id) ON DELETE CASCADE,
     type VARCHAR(100) NOT NULL,
     name VARCHAR(255) NOT NULL,
     description TEXT,
@@ -79,10 +79,10 @@ CREATE TABLE IF NOT EXISTS "Task" (
     "updatedAt" TIMESTAMP DEFAULT NOW()
 );
 
--- Posts table
+-- Posts table (handles both user posts and shop owner posts)
 CREATE TABLE IF NOT EXISTS "Post" (
-    id SERIAL PRIMARY KEY,
-    "userId" INTEGER NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "userId" UUID NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     image TEXT,
     likes INTEGER DEFAULT 0,
@@ -92,9 +92,9 @@ CREATE TABLE IF NOT EXISTS "Post" (
 
 -- Comments table
 CREATE TABLE IF NOT EXISTS "Comment" (
-    id SERIAL PRIMARY KEY,
-    "userId" INTEGER NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
-    "postId" INTEGER NOT NULL REFERENCES "Post"(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "userId" UUID NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
+    "postId" UUID NOT NULL REFERENCES "Post"(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     "createdAt" TIMESTAMP DEFAULT NOW(),
     "updatedAt" TIMESTAMP DEFAULT NOW()
@@ -102,9 +102,9 @@ CREATE TABLE IF NOT EXISTS "Comment" (
 
 -- Replies table
 CREATE TABLE IF NOT EXISTS "Reply" (
-    id SERIAL PRIMARY KEY,
-    "userId" INTEGER NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
-    "commentId" INTEGER NOT NULL REFERENCES "Comment"(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "userId" UUID NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
+    "commentId" UUID NOT NULL REFERENCES "Comment"(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     "createdAt" TIMESTAMP DEFAULT NOW(),
     "updatedAt" TIMESTAMP DEFAULT NOW()
@@ -112,18 +112,18 @@ CREATE TABLE IF NOT EXISTS "Reply" (
 
 -- Post likes table
 CREATE TABLE IF NOT EXISTS "PostLike" (
-    id SERIAL PRIMARY KEY,
-    "userId" INTEGER NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
-    "postId" INTEGER NOT NULL REFERENCES "Post"(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "userId" UUID NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
+    "postId" UUID NOT NULL REFERENCES "Post"(id) ON DELETE CASCADE,
     "createdAt" TIMESTAMP DEFAULT NOW(),
     UNIQUE("userId", "postId")
 );
 
 -- Vaccination records table
 CREATE TABLE IF NOT EXISTS "VaccinationRecord" (
-    id SERIAL PRIMARY KEY,
-    "userId" INTEGER NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
-    "petId" INTEGER NOT NULL REFERENCES "Pet"(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "userId" UUID NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
+    "petId" UUID NOT NULL REFERENCES "Pet"(id) ON DELETE CASCADE,
     "vaccineName" VARCHAR(255) NOT NULL,
     date TIMESTAMP NOT NULL,
     "expirationDate" TIMESTAMP,
@@ -133,9 +133,9 @@ CREATE TABLE IF NOT EXISTS "VaccinationRecord" (
 
 -- Medical records table
 CREATE TABLE IF NOT EXISTS "MedicalRecord" (
-    id SERIAL PRIMARY KEY,
-    "userId" INTEGER NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
-    "petId" INTEGER NOT NULL REFERENCES "Pet"(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "userId" UUID NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
+    "petId" UUID NOT NULL REFERENCES "Pet"(id) ON DELETE CASCADE,
     type VARCHAR(100) NOT NULL,
     "medicineName" VARCHAR(255) NOT NULL,
     veterinarian VARCHAR(255) NOT NULL,
@@ -147,8 +147,8 @@ CREATE TABLE IF NOT EXISTS "MedicalRecord" (
 
 -- Shops table
 CREATE TABLE IF NOT EXISTS "Shop" (
-    id SERIAL PRIMARY KEY,
-    "userId" INTEGER UNIQUE NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "userId" UUID UNIQUE NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
     "shopName" VARCHAR(255) NOT NULL,
     "shopImage" TEXT,
     "shopLocation" TEXT NOT NULL,
@@ -169,8 +169,8 @@ CREATE TABLE IF NOT EXISTS "Shop" (
 
 -- Shop applications table
 CREATE TABLE IF NOT EXISTS "ShopApplication" (
-    id SERIAL PRIMARY KEY,
-    "userId" INTEGER NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "userId" UUID NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
     "shopName" VARCHAR(255) NOT NULL,
     "shopImage" TEXT,
     "shopLocation" TEXT NOT NULL,
@@ -185,16 +185,6 @@ CREATE TABLE IF NOT EXISTS "ShopApplication" (
     "availableDays" TEXT[] DEFAULT '{}',
     "isAvailable" BOOLEAN DEFAULT true,
     status VARCHAR(50) DEFAULT 'pending',
-    "createdAt" TIMESTAMP DEFAULT NOW(),
-    "updatedAt" TIMESTAMP DEFAULT NOW()
-);
-
--- Promotional posts table
-CREATE TABLE IF NOT EXISTS "PromotionalPost" (
-    id SERIAL PRIMARY KEY,
-    "shopId" INTEGER NOT NULL REFERENCES "Shop"(id) ON DELETE CASCADE,
-    caption TEXT,
-    image TEXT,
     "createdAt" TIMESTAMP DEFAULT NOW(),
     "updatedAt" TIMESTAMP DEFAULT NOW()
 );
@@ -240,7 +230,6 @@ ALTER TABLE "VaccinationRecord" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "MedicalRecord" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "Shop" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "ShopApplication" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "PromotionalPost" ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================
 -- STEP 6: CREATE BASIC RLS POLICIES
@@ -258,7 +247,6 @@ CREATE POLICY "Allow all operations" ON "VaccinationRecord" FOR ALL USING (true)
 CREATE POLICY "Allow all operations" ON "MedicalRecord" FOR ALL USING (true);
 CREATE POLICY "Allow all operations" ON "Shop" FOR ALL USING (true);
 CREATE POLICY "Allow all operations" ON "ShopApplication" FOR ALL USING (true);
-CREATE POLICY "Allow all operations" ON "PromotionalPost" FOR ALL USING (true);
 
 -- =====================================================
 -- STEP 7: CREATE TRIGGERS FOR UPDATED AT
@@ -304,9 +292,6 @@ CREATE TRIGGER update_shop_updated_at BEFORE UPDATE ON "Shop"
 CREATE TRIGGER update_shop_application_updated_at BEFORE UPDATE ON "ShopApplication"
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_promotional_post_updated_at BEFORE UPDATE ON "PromotionalPost"
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
 -- =====================================================
 -- STEP 8: GRANT PERMISSIONS
 -- =====================================================
@@ -322,9 +307,10 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
 DO $$
 BEGIN
     RAISE NOTICE '✅ PetHub Supabase schema created successfully!';
-    RAISE NOTICE '📊 Tables: 13 tables created';
+    RAISE NOTICE '📊 Tables: 12 tables created with UUID primary keys';
     RAISE NOTICE '🔒 Security: RLS enabled on all tables';
     RAISE NOTICE '📁 Storage: 4 storage buckets configured';
     RAISE NOTICE '⚡ Performance: Indexes created';
     RAISE NOTICE '🔄 Triggers: Auto-update timestamps configured';
+    RAISE NOTICE '📝 Unified Post Model: Single Post table handles both user and shop owner posts';
 END $$;

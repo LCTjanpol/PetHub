@@ -19,7 +19,7 @@ The error `cannot cast type uuid to integer` occurred because Supabase uses UUID
 ### **Step 3: Verify the Setup**
 After execution, you should see:
 - ✅ Success messages in the output
-- 📊 13 tables created in the Table Editor
+- 📊 12 tables created in the Table Editor
 - 📁 4 storage buckets in Storage section
 - 🔒 RLS enabled on all tables
 
@@ -49,11 +49,11 @@ CREATE POLICY "Users can view their own pets" ON "Pet"
 
 ## 🗄️ **Database Structure Created**
 
-### **Core Tables (13 total):**
+### **Core Tables (12 total):**
 1. **User** - User accounts and profiles
 2. **Pet** - Pet profiles and information
 3. **Task** - Pet care tasks and reminders
-4. **Post** - Social media posts
+4. **Post** - Social media posts (unified for users and shop owners)
 5. **Comment** - Comments on posts
 6. **Reply** - Replies to comments
 7. **PostLike** - Post likes by users
@@ -61,12 +61,11 @@ CREATE POLICY "Users can view their own pets" ON "Pet"
 9. **MedicalRecord** - Pet medical records
 10. **Shop** - Pet shop information
 11. **ShopApplication** - Shop ownership applications
-12. **PromotionalPost** - Shop promotional posts
 
 ### **Storage Buckets (4 total):**
 - `profile-pictures` - User profile images
 - `pet-pictures` - Pet profile images
-- `post-images` - Post images
+- `post-images` - Post images (for both users and shop owners)
 - `shop-images` - Shop images
 
 ## 🔒 **Security Features**
@@ -81,7 +80,7 @@ CREATE POLICY "Users can view their own pets" ON "Pet"
 ### **RLS Policies Include:**
 - **User Access**: Users can only view/edit their own profiles
 - **Pet Access**: Users can only manage their own pets
-- **Post Access**: Public viewing, restricted editing
+- **Post Access**: Public viewing, restricted editing (unified for all users)
 - **Shop Access**: Public viewing of approved shops
 - **Admin Access**: Full system access for administrators
 
@@ -105,6 +104,12 @@ CREATE POLICY "Users can view their own pets" ON "Pet"
 - **No more casting errors** with `auth.uid()`
 - **Better security** and scalability
 - **Compatible with Supabase Auth**
+
+### **Unified Post Model:**
+- **Single Post table** handles both user posts and shop owner posts
+- **No separate promotional posts** - everything goes through the main Post model
+- **Simplified architecture** with consistent data structure
+- **Easier maintenance** and querying
 
 ### **Storage Structure:**
 - Files are organized by user ID in folders
@@ -140,10 +145,11 @@ SELECT * FROM storage.buckets;
 1. **Update Backend Environment:**
    - Use the Supabase connection string
    - Update any hardcoded ID types to UUID
+   - Ensure Post model handles both user types
 
 2. **Test API Endpoints:**
    - Verify database connections
-   - Test CRUD operations
+   - Test CRUD operations for posts (users and shop owners)
    - Verify RLS policies
 
 3. **Deploy to Vercel:**
@@ -169,14 +175,15 @@ GRANT ALL ON SCHEMA public TO public;
 ## 🎉 **Success Indicators**
 
 When everything is working correctly, you should see:
-- ✅ All 13 tables created successfully
+- ✅ All 12 tables created successfully
 - ✅ RLS policies applied without errors
 - ✅ Storage buckets configured
 - ✅ Indexes and triggers created
 - ✅ Success messages in the output
+- ✅ Unified Post model working for both users and shop owners
 
 ---
 
 **Your PetHub Supabase database is now ready!** 🐾✨
 
-Execute the `SUPABASE_SCHEMA_FIXED.sql` file and you'll have a fully functional, secure database with proper UUID support.
+Execute the `SUPABASE_SCHEMA_FIXED.sql` file and you'll have a fully functional, secure database with proper UUID support and a unified Post model.

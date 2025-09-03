@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS "Task" (
     "updatedAt" TIMESTAMP DEFAULT NOW()
 );
 
--- Posts table
+-- Posts table (handles both user posts and shop owner posts)
 CREATE TABLE IF NOT EXISTS "Post" (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     "userId" UUID NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
@@ -189,16 +189,6 @@ CREATE TABLE IF NOT EXISTS "ShopApplication" (
     "updatedAt" TIMESTAMP DEFAULT NOW()
 );
 
--- Promotional posts table
-CREATE TABLE IF NOT EXISTS "PromotionalPost" (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    "shopId" UUID NOT NULL REFERENCES "Shop"(id) ON DELETE CASCADE,
-    caption TEXT,
-    image TEXT,
-    "createdAt" TIMESTAMP DEFAULT NOW(),
-    "updatedAt" TIMESTAMP DEFAULT NOW()
-);
-
 -- =====================================================
 -- STEP 4: CREATE INDEXES
 -- =====================================================
@@ -240,7 +230,6 @@ ALTER TABLE "VaccinationRecord" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "MedicalRecord" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "Shop" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "ShopApplication" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "PromotionalPost" ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================
 -- STEP 6: CREATE RLS POLICIES (FIXED FOR UUID)
@@ -295,7 +284,7 @@ CREATE POLICY "Users can update their own tasks" ON "Task"
 CREATE POLICY "Users can delete their own tasks" ON "Task"
     FOR DELETE USING ("userId" = auth.uid());
 
--- Post policies
+-- Post policies (handles both user and shop owner posts)
 CREATE POLICY "Anyone can view posts" ON "Post"
     FOR SELECT USING (true);
 
@@ -422,34 +411,6 @@ CREATE POLICY "Admins can update all applications" ON "ShopApplication"
         )
     );
 
--- PromotionalPost policies
-CREATE POLICY "Anyone can view promotional posts" ON "PromotionalPost"
-    FOR SELECT USING (true);
-
-CREATE POLICY "Shop owners can create promotional posts" ON "PromotionalPost"
-    FOR INSERT WITH CHECK (
-        EXISTS (
-            SELECT 1 FROM "Shop" 
-            WHERE id = "shopId" AND "userId" = auth.uid() AND approved = true
-        )
-    );
-
-CREATE POLICY "Shop owners can update their promotional posts" ON "PromotionalPost"
-    FOR UPDATE USING (
-        EXISTS (
-            SELECT 1 FROM "Shop" 
-            WHERE id = "shopId" AND "userId" = auth.uid() AND approved = true
-        )
-    );
-
-CREATE POLICY "Shop owners can delete their promotional posts" ON "PromotionalPost"
-    FOR DELETE USING (
-        EXISTS (
-            SELECT 1 FROM "Shop" 
-            WHERE id = "shopId" AND "userId" = auth.uid() AND approved = true
-        )
-    );
-
 -- =====================================================
 -- STEP 7: CREATE TRIGGERS FOR UPDATED AT
 -- =====================================================
@@ -494,9 +455,6 @@ CREATE TRIGGER update_shop_updated_at BEFORE UPDATE ON "Shop"
 CREATE TRIGGER update_shop_application_updated_at BEFORE UPDATE ON "ShopApplication"
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_promotional_post_updated_at BEFORE UPDATE ON "PromotionalPost"
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
 -- =====================================================
 -- STEP 8: GRANT PERMISSIONS
 -- =====================================================
@@ -512,10 +470,11 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
 DO $$
 BEGIN
     RAISE NOTICE '✅ PetHub Supabase schema created successfully with UUID support!';
-    RAISE NOTICE '📊 Tables: 13 tables created with UUID primary keys';
+    RAISE NOTICE '📊 Tables: 12 tables created with UUID primary keys';
     RAISE NOTICE '🔒 Security: RLS policies configured for UUID auth.uid()';
     RAISE NOTICE '📁 Storage: 4 storage buckets configured';
     RAISE NOTICE '⚡ Performance: Indexes created for optimal queries';
     RAISE NOTICE '🔄 Triggers: Auto-update timestamps configured';
     RAISE NOTICE '🔑 UUID: All tables now use UUID for compatibility with Supabase auth';
+    RAISE NOTICE '📝 Unified Post Model: Single Post table handles both user and shop owner posts';
 END $$;
