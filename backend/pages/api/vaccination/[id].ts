@@ -1,4 +1,6 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextApiResponse } from 'next';
+import { PrismaClient } from '@prisma/client';
+import jwt from 'jsonwebtoken';
 import prisma from '../../../lib/prisma';
 import { authMiddleware } from '../../../lib/middleware';
 import type { AuthenticatedRequest } from '../../../types/next';

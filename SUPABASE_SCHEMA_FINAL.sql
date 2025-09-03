@@ -1,5 +1,5 @@
--- 🚀 PetHub Supabase Database Schema (Simplified)
--- Execute this in Supabase SQL Editor
+-- 🚀 PetHub Supabase Database Schema (Final - All UUID Types)
+-- Execute this in Supabase SQL Editor to fix all UUID type casting errors
 
 -- =====================================================
 -- STEP 1: ENABLE EXTENSIONS
@@ -33,7 +33,7 @@ VALUES ('shop-images', 'shop-images', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- =====================================================
--- STEP 3: CREATE TABLES
+-- STEP 3: CREATE TABLES WITH UUID PRIMARY KEYS
 -- =====================================================
 
 -- Users table
@@ -232,21 +232,184 @@ ALTER TABLE "Shop" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "ShopApplication" ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================
--- STEP 6: CREATE BASIC RLS POLICIES
+-- STEP 6: CREATE RLS POLICIES (ALL UUID TYPES)
 -- =====================================================
 
--- Allow all operations for now (you can restrict later)
-CREATE POLICY "Allow all operations" ON "User" FOR ALL USING (true);
-CREATE POLICY "Allow all operations" ON "Pet" FOR ALL USING (true);
-CREATE POLICY "Allow all operations" ON "Task" FOR ALL USING (true);
-CREATE POLICY "Allow all operations" ON "Post" FOR ALL USING (true);
-CREATE POLICY "Allow all operations" ON "Comment" FOR ALL USING (true);
-CREATE POLICY "Allow all operations" ON "Reply" FOR ALL USING (true);
-CREATE POLICY "Allow all operations" ON "PostLike" FOR ALL USING (true);
-CREATE POLICY "Allow all operations" ON "VaccinationRecord" FOR ALL USING (true);
-CREATE POLICY "Allow all operations" ON "MedicalRecord" FOR ALL USING (true);
-CREATE POLICY "Allow all operations" ON "Shop" FOR ALL USING (true);
-CREATE POLICY "Allow all operations" ON "ShopApplication" FOR ALL USING (true);
+-- User policies
+CREATE POLICY "Users can view their own profile" ON "User"
+    FOR SELECT USING (auth.uid()::text = id::text);
+
+CREATE POLICY "Users can update their own profile" ON "User"
+    FOR UPDATE USING (auth.uid()::text = id::text);
+
+CREATE POLICY "Admins can view all users" ON "User"
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM "User" 
+            WHERE id::text = auth.uid()::text AND "isAdmin" = true
+        )
+    );
+
+CREATE POLICY "Admins can update all users" ON "User"
+    FOR UPDATE USING (
+        EXISTS (
+            SELECT 1 FROM "User" 
+            WHERE id::text = auth.uid()::text AND "isAdmin" = true
+        )
+    );
+
+-- Pet policies
+CREATE POLICY "Users can view their own pets" ON "Pet"
+    FOR SELECT USING ("userId"::text = auth.uid()::text);
+
+CREATE POLICY "Users can create their own pets" ON "Pet"
+    FOR INSERT WITH CHECK ("userId"::text = auth.uid()::text);
+
+CREATE POLICY "Users can update their own pets" ON "Pet"
+    FOR UPDATE USING ("userId"::text = auth.uid()::text);
+
+CREATE POLICY "Users can delete their own pets" ON "Pet"
+    FOR DELETE USING ("userId"::text = auth.uid()::text);
+
+-- Task policies
+CREATE POLICY "Users can view their own tasks" ON "Task"
+    FOR SELECT USING ("userId"::text = auth.uid()::text);
+
+CREATE POLICY "Users can create their own tasks" ON "Task"
+    FOR INSERT WITH CHECK ("userId"::text = auth.uid()::text);
+
+CREATE POLICY "Users can update their own tasks" ON "Task"
+    FOR UPDATE USING ("userId"::text = auth.uid()::text);
+
+CREATE POLICY "Users can delete their own tasks" ON "Task"
+    FOR DELETE USING ("userId"::text = auth.uid()::text);
+
+-- Post policies (handles both user and shop owner posts)
+CREATE POLICY "Anyone can view posts" ON "Post"
+    FOR SELECT USING (true);
+
+CREATE POLICY "Users can create their own posts" ON "Post"
+    FOR INSERT WITH CHECK ("userId"::text = auth.uid()::text);
+
+CREATE POLICY "Users can update their own posts" ON "Post"
+    FOR UPDATE USING ("userId"::text = auth.uid()::text);
+
+CREATE POLICY "Users can delete their own posts" ON "Post"
+    FOR DELETE USING ("userId"::text = auth.uid()::text);
+
+-- Comment policies
+CREATE POLICY "Anyone can view comments" ON "Comment"
+    FOR SELECT USING (true);
+
+CREATE POLICY "Users can create their own comments" ON "Comment"
+    FOR INSERT WITH CHECK ("userId"::text = auth.uid()::text);
+
+CREATE POLICY "Users can update their own comments" ON "Comment"
+    FOR UPDATE USING ("userId"::text = auth.uid()::text);
+
+CREATE POLICY "Users can delete their own comments" ON "Comment"
+    FOR DELETE USING ("userId"::text = auth.uid()::text);
+
+-- Reply policies
+CREATE POLICY "Anyone can view replies" ON "Reply"
+    FOR SELECT USING (true);
+
+CREATE POLICY "Users can create their own replies" ON "Reply"
+    FOR INSERT WITH CHECK ("userId"::text = auth.uid()::text);
+
+CREATE POLICY "Users can update their own replies" ON "Reply"
+    FOR UPDATE USING ("userId"::text = auth.uid()::text);
+
+CREATE POLICY "Users can delete their own replies" ON "Reply"
+    FOR DELETE USING ("userId"::text = auth.uid()::text);
+
+-- PostLike policies
+CREATE POLICY "Anyone can view post likes" ON "PostLike"
+    FOR SELECT USING (true);
+
+CREATE POLICY "Users can create their own post likes" ON "PostLike"
+    FOR INSERT WITH CHECK ("userId"::text = auth.uid()::text);
+
+CREATE POLICY "Users can delete their own post likes" ON "PostLike"
+    FOR DELETE USING ("userId"::text = auth.uid()::text);
+
+-- VaccinationRecord policies
+CREATE POLICY "Users can view their own vaccination records" ON "VaccinationRecord"
+    FOR SELECT USING ("userId"::text = auth.uid()::text);
+
+CREATE POLICY "Users can create their own vaccination records" ON "VaccinationRecord"
+    FOR INSERT WITH CHECK ("userId"::text = auth.uid()::text);
+
+CREATE POLICY "Users can update their own vaccination records" ON "VaccinationRecord"
+    FOR UPDATE USING ("userId"::text = auth.uid()::text);
+
+CREATE POLICY "Users can delete their own vaccination records" ON "VaccinationRecord"
+    FOR DELETE USING ("userId"::text = auth.uid()::text);
+
+-- MedicalRecord policies
+CREATE POLICY "Users can view their own medical records" ON "MedicalRecord"
+    FOR SELECT USING ("userId"::text = auth.uid()::text);
+
+CREATE POLICY "Users can create their own medical records" ON "MedicalRecord"
+    FOR INSERT WITH CHECK ("userId"::text = auth.uid()::text);
+
+CREATE POLICY "Users can update their own medical records" ON "MedicalRecord"
+    FOR UPDATE USING ("userId"::text = auth.uid()::text);
+
+CREATE POLICY "Users can delete their own medical records" ON "MedicalRecord"
+    FOR DELETE USING ("userId"::text = auth.uid()::text);
+
+-- Shop policies
+CREATE POLICY "Anyone can view approved shops" ON "Shop"
+    FOR SELECT USING (approved = true);
+
+CREATE POLICY "Shop owners can view their own shop" ON "Shop"
+    FOR SELECT USING ("userId"::text = auth.uid()::text);
+
+CREATE POLICY "Shop owners can update their own shop" ON "Shop"
+    FOR UPDATE USING ("userId"::text = auth.uid()::text);
+
+CREATE POLICY "Admins can view all shops" ON "Shop"
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM "User" 
+            WHERE id::text = auth.uid()::text AND "isAdmin" = true
+        )
+    );
+
+CREATE POLICY "Admins can update all shops" ON "Shop"
+    FOR UPDATE USING (
+        EXISTS (
+            SELECT 1 FROM "User" 
+            WHERE id::text = auth.uid()::text AND "isAdmin" = true
+        )
+    );
+
+-- ShopApplication policies
+CREATE POLICY "Users can view their own applications" ON "ShopApplication"
+    FOR SELECT USING ("userId"::text = auth.uid()::text);
+
+CREATE POLICY "Users can create their own applications" ON "ShopApplication"
+    FOR INSERT WITH CHECK ("userId"::text = auth.uid()::text);
+
+CREATE POLICY "Users can update their own applications" ON "ShopApplication"
+    FOR UPDATE USING ("userId"::text = auth.uid()::text);
+
+CREATE POLICY "Admins can view all applications" ON "ShopApplication"
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM "User" 
+            WHERE id::text = auth.uid()::text AND "isAdmin" = true
+        )
+    );
+
+CREATE POLICY "Admins can update all applications" ON "ShopApplication"
+    FOR UPDATE USING (
+        EXISTS (
+            SELECT 1 FROM "User" 
+            WHERE id::text = auth.uid()::text AND "isAdmin" = true
+        )
+    );
 
 -- =====================================================
 -- STEP 7: CREATE TRIGGERS FOR UPDATED AT
@@ -306,11 +469,13 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
 
 DO $$
 BEGIN
-    RAISE NOTICE '✅ PetHub Supabase schema created successfully!';
+    RAISE NOTICE '✅ PetHub Supabase schema created successfully with UUID support!';
     RAISE NOTICE '📊 Tables: 12 tables created with UUID primary keys';
-    RAISE NOTICE '🔒 Security: RLS enabled on all tables';
+    RAISE NOTICE '🔒 Security: RLS policies configured for UUID auth.uid() with explicit casting';
     RAISE NOTICE '📁 Storage: 4 storage buckets configured';
-    RAISE NOTICE '⚡ Performance: Indexes created';
+    RAISE NOTICE '⚡ Performance: Indexes created for optimal queries';
     RAISE NOTICE '🔄 Triggers: Auto-update timestamps configured';
+    RAISE NOTICE '🔑 UUID: All tables now use UUID for compatibility with Supabase auth';
     RAISE NOTICE '📝 Unified Post Model: Single Post table handles both user and shop owner posts';
+    RAISE NOTICE '🔧 Type Safety: All UUID comparisons use explicit text casting for compatibility';
 END $$;

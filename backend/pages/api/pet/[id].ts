@@ -73,9 +73,9 @@ const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
         return res.status(404).json({ message: 'Pet not found or does not belong to user' });
       }
       
-            let petPicture = undefined;
+      let petImage: formidable.File | null = null;
       
-            // Check if there's a new image file - FIXED LOGIC FOR REACT NATIVE
+      // Check if there's a new image file - FIXED LOGIC FOR REACT NATIVE
       if (files.petPicture && Object.keys(files.petPicture).length > 0) {
         // ✅ File upload detected (browser or React Native)
         try {
@@ -87,13 +87,13 @@ const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
             await fs.mkdir(uploadDir, { recursive: true });
             const targetPath = path.join(uploadDir, fileName);
             await fs.copyFile(file.filepath, targetPath);
-            petPicture = `/uploads/${fileName}`;
-            console.log('[PUT /pet/[id]] ✅ New image uploaded successfully:', petPicture);
+            petImage = file; // Assign the formidable.File object
+            console.log('[PUT /pet/[id]] ✅ New image uploaded successfully:', file.originalFilename);
           }
         } catch (imageError) {
           console.error('[PUT /pet/[id]] ❌ Error processing image file:', imageError);
           // Keep existing image if there's an error
-          petPicture = existingPet.petPicture;
+          petImage = null; // Ensure it's null if there's an error
         }
       } else if (fields.petPicture !== undefined) {
         // Handle image from React Native FormData
@@ -101,7 +101,7 @@ const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
         
         if (petPictureField === '') {
           // User removed the image
-          petPicture = '';
+          petImage = null;
           console.log('[PUT /pet/[id]] Image removed by user');
         } else if (petPictureField && typeof petPictureField === 'object' && petPictureField.uri) {
           // ❌ CRITICAL BUG FIX: React Native image object - this should NEVER happen
@@ -110,21 +110,21 @@ const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
           console.error('[PUT /pet/[id]] This should be processed as a file upload, not stored as URI');
           
           // Keep existing image to prevent data corruption
-          petPicture = existingPet.petPicture;
+          petImage = null; // Ensure it's null
           console.log('[PUT /pet/[id]] Keeping existing image to prevent corruption:', existingPet.petPicture);
         } else if (petPictureField && (petPictureField.startsWith('/uploads') || petPictureField.startsWith('http'))) {
           // Existing server image - keep it
-          petPicture = petPictureField;
-          console.log('[PUT /pet/[id]] 🔒 Keeping existing server image:', petPicture);
+          petImage = null; // Ensure it's null
+          console.log('[PUT /pet/[id]] 🔒 Keeping existing server image:', petPictureField);
         } else {
           // No image change - keep existing
-          petPicture = existingPet.petPicture;
-          console.log('[PUT /pet/[id]] 🔄 No image change, keeping existing:', petPicture);
+          petImage = null; // Ensure it's null
+          console.log('[PUT /pet/[id]] 🔄 No image change, keeping existing:', existingPet.petPicture);
         }
       } else {
         // No image change - keep existing
-        petPicture = existingPet.petPicture;
-        console.log('[PUT /pet/[id]] 🔄 No image change, keeping existing:', petPicture);
+        petImage = null; // Ensure it's null
+        console.log('[PUT /pet/[id]] 🔄 No image change, keeping existing:', existingPet.petPicture);
       }
     // Always update all fields to allow clearing values
     const data: Record<string, unknown> = {};
@@ -133,7 +133,19 @@ const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
     data.type = type;
     data.breed = breed;
     data.healthCondition = healthCondition;
-    if (petPicture !== undefined) data.petPicture = petPicture;
+    if (petImage !== null) {
+      const fileExtension = path.extname(petImage.originalFilename);
+      const fileName = `${userId}_${petId}_${Date.now()}${fileExtension}`;
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+      await fs.mkdir(uploadDir, { recursive: true });
+      const targetPath = path.join(uploadDir, fileName);
+      await fs.copyFile(petImage.filepath, targetPath);
+      data.petPicture = `/uploads/${fileName}`;
+    } else if (fields.petPicture === '') {
+      data.petPicture = ''; // Clear petPicture if it was removed
+    } else {
+      data.petPicture = existingPet.petPicture; // Keep existing if no new image
+    }
     
           console.log('[PUT /pet/[id]] Data to update:', data);
       

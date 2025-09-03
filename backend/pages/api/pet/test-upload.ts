@@ -1,10 +1,9 @@
 // File: test-upload.ts
 // Description: Test endpoint to verify FormData and image upload processing
 
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextApiRequest, NextApiResponse } from 'next';
 import formidable from 'formidable';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { prisma } from '../../../lib/prisma';
 
 export const config = {
   api: {

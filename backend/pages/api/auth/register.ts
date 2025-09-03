@@ -35,7 +35,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     // Check content type to determine if it's multipart form data
     const contentType = req.headers['content-type'] || '';
     let fullName: string, gender: string, birthdate: string, email: string, password: string;
-    let profileImage: any = null;
+    let profileImage: formidable.File | null = null;
 
     if (contentType.includes('multipart/form-data')) {
       // Handle form data with potential file upload
@@ -63,7 +63,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       birthdate = fields.birthdate?.[0]?.trim() || '';
       email = fields.email?.[0]?.trim().toLowerCase() || '';
       password = fields.password?.[0] || '';
-      profileImage = files.profileImage;
+      profileImage = Array.isArray(files.profileImage) ? files.profileImage[0] : files.profileImage || null;
     } else {
       // Handle JSON data (no file upload)
       const body = await new Promise<string>((resolve, reject) => {
@@ -149,17 +149,16 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     let profilePicture = null;
     if (profileImage) {
       console.log('Profile image received:', profileImage);
-      const file = Array.isArray(profileImage) ? profileImage[0] : profileImage;
-      if (file && file.originalFilename) {
+      if (profileImage.originalFilename) {
         try {
-          const fileExtension = path.extname(file.originalFilename);
+          const fileExtension = path.extname(profileImage.originalFilename);
           // Use userId and email for the filename
           const safeEmail = email.replace(/[^a-zA-Z0-9]/g, '_');
           const fileName = `${user.id}_${safeEmail}${fileExtension}`;
           const uploadDir = path.join(process.cwd(), 'public', 'uploads');
           await fs.mkdir(uploadDir, { recursive: true });
           const targetPath = path.join(uploadDir, fileName);
-          await fs.copyFile(file.filepath, targetPath);
+          await fs.copyFile(profileImage.filepath, targetPath);
           profilePicture = `/uploads/${fileName}`;
           // Update user with the new profilePicture path
           const updatedUser = await prisma.user.update({

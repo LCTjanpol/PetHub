@@ -1,32 +1,27 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import formidable from 'formidable';
 import prisma from '../../../lib/prisma';
 import { authMiddleware } from '../../../lib/middleware';
-import formidable from 'formidable';
-import { promises as fs } from 'fs';
-import path from 'path';
 
 export const config = {
   api: {
-    bodyParser: false, // Disable the default body parser
+    bodyParser: false,
   },
 };
 
-interface AuthedRequest extends NextApiRequest {
-  user?: { userId: number };
-}
-
-const handler = async (req: AuthedRequest, res: NextApiResponse) => {
-  const userId = req.user?.userId;
-
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     try {
-      // Parse multipart/form-data
+      const userId = req.headers['user-id'] as string;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized: userId missing' });
+      }
+
       const form = formidable({
-        multiples: false,
-        keepExtensions: true,
         maxFileSize: 5 * 1024 * 1024 // 5MB limit
       });
-      const [fields, files] = await new Promise<[formidable.Fields, formidable.Files]>((resolve, reject) => {
+      const [fields] = await new Promise<[formidable.Fields, formidable.Files]>((resolve, reject) => {
         form.parse(req, (err: Error | null, fields: formidable.Fields, files: formidable.Files) => {
           if (err) reject(err);
           else resolve([fields, files]);
@@ -43,12 +38,6 @@ const handler = async (req: AuthedRequest, res: NextApiResponse) => {
       if (!content || content.trim() === '') {
         return res.status(400).json({ message: 'Post content is required' });
       }
-
-      // Check if user is a shop owner
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { isShopOwner: true },
-      });
 
       // Create the post
       const post = await prisma.post.create({
