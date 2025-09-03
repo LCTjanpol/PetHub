@@ -13,7 +13,8 @@
     "db:studio": "prisma studio",
     "db:seed": "node prisma/seed.js",
     "test": "jest",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "vercel-build": "prisma generate && prisma db push && next build"
   },
   "dependencies": {
     "@prisma/client": "^6.8.2",
