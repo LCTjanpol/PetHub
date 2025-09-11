@@ -46,20 +46,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     // Extract form data with proper array handling
-    const shopName = Array.isArray(fields.shopName) ? fields.shopName[0] : (fields.shopName as string) || '';
-    const shopLocation = Array.isArray(fields.shopLocation) ? fields.shopLocation[0] : (fields.shopLocation as string) || '';
-    const bio = Array.isArray(fields.bio) ? fields.bio[0] : (fields.bio as string) || '';
-    const contactNumber = Array.isArray(fields.contactNumber) ? fields.contactNumber[0] : (fields.contactNumber as string) || '';
-    const shopMessage = Array.isArray(fields.shopMessage) ? fields.shopMessage[0] : (fields.shopMessage as string) || '';
-    const shopType = Array.isArray(fields.shopType) ? fields.shopType[0] : (fields.shopType as string) || '';
-    const openingTime = Array.isArray(fields.openingTime) ? fields.openingTime[0] : (fields.openingTime as string) || '';
-    const closingTime = Array.isArray(fields.closingTime) ? fields.closingTime[0] : (fields.closingTime as string) || '';
-    const availableDays = Array.isArray(fields.availableDays) ? fields.availableDays[0] : (fields.availableDays as string) || '';
+    const shopName = Array.isArray(fields.shopName) ? fields.shopName[0] : (typeof fields.shopName === 'string' ? fields.shopName : '');
+    const shopLocation = Array.isArray(fields.shopLocation) ? fields.shopLocation[0] : (typeof fields.shopLocation === 'string' ? fields.shopLocation : '');
+    const bio = Array.isArray(fields.bio) ? fields.bio[0] : (typeof fields.bio === 'string' ? fields.bio : '');
+    const contactNumber = Array.isArray(fields.contactNumber) ? fields.contactNumber[0] : (typeof fields.contactNumber === 'string' ? fields.contactNumber : '');
+    const shopMessage = Array.isArray(fields.shopMessage) ? fields.shopMessage[0] : (typeof fields.shopMessage === 'string' ? fields.shopMessage : '');
+    const shopType = Array.isArray(fields.shopType) ? fields.shopType[0] : (typeof fields.shopType === 'string' ? fields.shopType : '');
+    const openingTime = Array.isArray(fields.openingTime) ? fields.openingTime[0] : (typeof fields.openingTime === 'string' ? fields.openingTime : '');
+    const closingTime = Array.isArray(fields.closingTime) ? fields.closingTime[0] : (typeof fields.closingTime === 'string' ? fields.closingTime : '');
+    const availableDays = Array.isArray(fields.availableDays) ? fields.availableDays[0] : (typeof fields.availableDays === 'string' ? fields.availableDays : '');
     const isAvailable = Array.isArray(fields.isAvailable) ? fields.isAvailable[0] === 'true' : fields.isAvailable === 'true';
     
     // Extract coordinates for map pinning
-    const latitude = Array.isArray(fields.latitude) ? parseFloat(fields.latitude[0]) : parseFloat(fields.latitude as string || '0');
-    const longitude = Array.isArray(fields.longitude) ? parseFloat(fields.longitude[0]) : parseFloat(fields.longitude as string || '0');
+    const latitude = Array.isArray(fields.latitude) ? parseFloat(fields.latitude[0]) : parseFloat(typeof fields.latitude === 'string' ? fields.latitude : '0');
+    const longitude = Array.isArray(fields.longitude) ? parseFloat(fields.longitude[0]) : parseFloat(typeof fields.longitude === 'string' ? fields.longitude : '0');
 
     // Parse available days JSON
     let parsedAvailableDays: string[] = [];
