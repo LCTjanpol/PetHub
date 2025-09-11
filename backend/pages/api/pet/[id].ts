@@ -111,17 +111,17 @@ const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
         
         console.log('[PUT /pet/[id]] Pet updated successfully:', pet.id);
         return res.status(200).json(pet);
-      } catch (prismaError: Error) {
+      } catch (prismaError) {
         console.error('[PUT /pet/[id]] Prisma update error:', prismaError);
         
-        if (prismaError.code === 'P2002') {
+        if (prismaError && typeof prismaError === 'object' && 'code' in prismaError && prismaError.code === 'P2002') {
           return res.status(400).json({ message: 'Pet with this name already exists for this user' });
-        } else if (prismaError.code === 'P2025') {
+        } else if (prismaError && typeof prismaError === 'object' && 'code' in prismaError && prismaError.code === 'P2025') {
           return res.status(404).json({ message: 'Pet not found' });
         } else {
           return res.status(500).json({ 
             message: 'Database error while updating pet', 
-            error: prismaError.message 
+            error: prismaError instanceof Error ? prismaError.message : 'Unknown error'
           });
         }
       }
