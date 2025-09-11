@@ -21,7 +21,7 @@ const userHandler = async (req: NextApiRequest, res: NextApiResponse) => {
       console.log(`[userHandler] Successfully fetched ${shops.length} shops`);
       return res.status(200).json(shops);
     } catch (error) {
-      console.error('[userHandler] Error fetching shops:', error.message, error.stack);
+      console.error('[userHandler] Error fetching shops:', error instanceof Error ? error.message : 'Unknown error', error instanceof Error ? error.stack : '');
       return res.status(500).json({ message: 'Failed to fetch shop data' });
     }
   }
