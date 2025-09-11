@@ -109,12 +109,25 @@ const Profile = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       
+      // Handle different API response structures
+      let postsData = [];
+      if (Array.isArray(response.data)) {
+        postsData = response.data;
+      } else if (response.data && Array.isArray(response.data.data)) {
+        postsData = response.data.data;
+      } else {
+        console.log('[fetchUserPosts] Unexpected response structure:', response.data);
+        setUserPosts([]);
+        return;
+      }
+      
       // Filter posts by current user
-      const currentUserPosts = response.data.filter((post: Post) => post.userId === user.id);
+      const currentUserPosts = postsData.filter((post: Post) => post.userId === user.id);
       setUserPosts(currentUserPosts);
       
     } catch (error: any) {
       console.error('[fetchUserPosts] Error:', error.message, error.stack);
+      setUserPosts([]);
     }
   };
 

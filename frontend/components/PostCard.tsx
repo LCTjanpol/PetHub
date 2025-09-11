@@ -97,6 +97,9 @@ export default function PostCard({
   const [newComment, setNewComment] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
+  const [replyingToComment, setReplyingToComment] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const [isSubmittingReply, setIsSubmittingReply] = useState(false);
 
   const formatDate = (dateString: string) => {
     try {
@@ -159,6 +162,52 @@ export default function PostCard({
       console.error('Error adding comment:', error);
     } finally {
       setIsSubmittingComment(false);
+    }
+  };
+
+  const handleReplyPress = (commentId: string) => {
+    setReplyingToComment(commentId);
+    setReplyText('');
+  };
+
+  const handleCancelReply = () => {
+    setReplyingToComment(null);
+    setReplyText('');
+  };
+
+  const handleSubmitReply = async () => {
+    if (!replyText.trim() || !replyingToComment || !currentUserId) return;
+    
+    setIsSubmittingReply(true);
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        Alert.alert('Error', 'Authentication required');
+        return;
+      }
+
+      const response = await apiClient.post(
+        ENDPOINTS.POST.REPLIES(post.id, replyingToComment),
+        { content: replyText.trim() },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.success) {
+        Alert.alert('Success! 🎉', 'Reply added successfully!');
+        setReplyText('');
+        setReplyingToComment(null);
+        // Refresh the post data by calling onAddComment to trigger a refresh
+        if (onAddComment) {
+          onAddComment(post.id, ''); // Empty string won't add a comment but will refresh
+        }
+      } else {
+        Alert.alert('Error', response.data.message || 'Failed to add reply');
+      }
+    } catch (error: any) {
+      console.error('Error adding reply:', error);
+      Alert.alert('Error', 'Failed to add reply. Please try again.');
+    } finally {
+      setIsSubmittingReply(false);
     }
   };
 
@@ -280,6 +329,15 @@ export default function PostCard({
                   </View>
                   <Text style={styles.commentText}>{comment.content}</Text>
                   
+                  {/* Reply button */}
+                  <TouchableOpacity 
+                    onPress={() => handleReplyPress(comment.id)}
+                    style={styles.replyButton}
+                  >
+                    <FontAwesome5 name="reply" size={10} color="#4ECDC4" />
+                    <Text style={styles.replyButtonText}>Reply</Text>
+                  </TouchableOpacity>
+                  
                   {/* Reply toggle button */}
                   {comment.replies && comment.replies.length > 0 && (
                     <TouchableOpacity 
@@ -325,6 +383,40 @@ export default function PostCard({
                       </View>
                     </View>
                   ))}
+                </View>
+              )}
+              
+              {/* Reply Input Field */}
+              {replyingToComment === comment.id && (
+                <View style={styles.replyInputContainer}>
+                  <View style={styles.replyInputWrapper}>
+                    <TextInput
+                      style={styles.replyInput}
+                      placeholder="Write a reply..."
+                      value={replyText}
+                      onChangeText={setReplyText}
+                      multiline
+                      maxLength={500}
+                      placeholderTextColor="#999999"
+                    />
+                    <View style={styles.replyInputActions}>
+                      <TouchableOpacity 
+                        onPress={handleCancelReply}
+                        style={styles.replyCancelButton}
+                      >
+                        <Text style={styles.replyCancelText}>Cancel</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        onPress={handleSubmitReply}
+                        style={[styles.replySubmitButton, !replyText.trim() && styles.replySubmitButtonDisabled]}
+                        disabled={!replyText.trim() || isSubmittingReply}
+                      >
+                        <Text style={[styles.replySubmitText, !replyText.trim() && styles.replySubmitTextDisabled]}>
+                          {isSubmittingReply ? 'Posting...' : 'Reply'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
                 </View>
               )}
             </View>
@@ -791,5 +883,75 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  // Reply button styles
+  replyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    alignSelf: 'flex-start',
+  },
+  replyButtonText: {
+    fontSize: 12,
+    color: '#4ECDC4',
+    fontWeight: '500',
+    marginLeft: 4,
+  },
+  // Reply input styles
+  replyInputContainer: {
+    marginTop: 12,
+    marginLeft: 16,
+    paddingLeft: 16,
+    borderLeftWidth: 2,
+    borderLeftColor: '#4ECDC4',
+  },
+  replyInputWrapper: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  replyInput: {
+    fontSize: 14,
+    color: '#0E0F0F',
+    minHeight: 40,
+    maxHeight: 100,
+    textAlignVertical: 'top',
+    marginBottom: 8,
+  },
+  replyInputActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
+  replyCancelButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    marginRight: 8,
+  },
+  replyCancelText: {
+    fontSize: 14,
+    color: '#666666',
+    fontWeight: '500',
+  },
+  replySubmitButton: {
+    backgroundColor: '#4ECDC4',
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+  },
+  replySubmitButtonDisabled: {
+    backgroundColor: '#E0E0E0',
+  },
+  replySubmitText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  replySubmitTextDisabled: {
+    color: '#999999',
   },
 });
