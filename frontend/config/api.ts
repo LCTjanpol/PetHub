@@ -73,7 +73,7 @@ export const ENDPOINTS = {
     DELETE: (id: string) => `/vaccine/${id}`,
   },
   POST: {
-    LIST: '/post',
+    LIST: '/posts',
     CREATE: '/post',
     DETAIL: (id: string) => `/posts/${id}`,
     UPDATE: (id: string) => `/posts/${id}`,

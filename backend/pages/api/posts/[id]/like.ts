@@ -23,7 +23,7 @@ const handler = async (req: AuthedRequest, res: NextApiResponse) => {
     try {
       console.log(`Like request - userId: ${userId}, postId: ${postId}`);
       
-      // Toggle like on post
+      // Check if already liked
       const existingLike = await prisma.postLike.findUnique({
         where: {
           userId_postId: {
@@ -33,27 +33,14 @@ const handler = async (req: AuthedRequest, res: NextApiResponse) => {
         },
       });
 
-      console.log('Existing like:', existingLike);
-
       if (existingLike) {
-        // Unlike
-        await prisma.postLike.delete({
-          where: {
-            userId_postId: {
-              userId,
-              postId,
-            },
-          },
-        });
-
-        console.log('Post unliked successfully');
-        res.status(200).json({
-          success: true,
-          message: 'Post unliked successfully',
-          liked: false,
+        // Already liked
+        res.status(400).json({
+          success: false,
+          message: 'Post already liked',
         });
       } else {
-        // Like
+        // Add like
         await prisma.postLike.create({
           data: {
             userId,
@@ -65,7 +52,6 @@ const handler = async (req: AuthedRequest, res: NextApiResponse) => {
         res.status(201).json({
           success: true,
           message: 'Post liked successfully',
-          liked: true,
         });
       }
     } catch (error) {
