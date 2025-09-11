@@ -198,25 +198,17 @@ const EditPetProfileScreen = () => {
       formData.append('breed', pet.breed);
       formData.append('healthCondition', pet.healthCondition);
       
-      // Handle image updates - only send new images or clear command
-      if (profileImage) {
-        if (profileImage.startsWith('file://') || profileImage.startsWith('content://')) {
-          // New local image from ImagePicker - send as file
-          const imageFile = {
-            uri: profileImage,
-            type: 'image/jpeg',
-            name: `pet_${Date.now()}.jpg`,
-          };
-          formData.append('petPicture', imageFile as any);
-        } else if (profileImage.startsWith('/uploads') || profileImage.startsWith('http')) {
-          // Existing server image - send the path to keep it
-          formData.append('petPicture', profileImage);
-        }
-        // If profileImage is neither local nor server path, don't send anything
-      } else {
-        // No image - send empty string to clear image
-        formData.append('petPicture', '');
+      // Handle image updates - only send new images (like user profile update)
+      if (profileImage && (profileImage.startsWith('file://') || profileImage.startsWith('content://'))) {
+        // New local image from ImagePicker - send as file
+        const imageFile = {
+          uri: profileImage,
+          type: 'image/jpeg',
+          name: `pet_${Date.now()}.jpg`,
+        };
+        formData.append('petPicture', imageFile as any);
       }
+      // Don't send existing server images or empty strings - let backend keep existing
 
 
 

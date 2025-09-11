@@ -73,68 +73,35 @@ const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
         return res.status(404).json({ message: 'Pet not found or does not belong to user' });
       }
       
-      // Handle image updates - simplified logic
-      let newImagePath = null;
-      
-      // Check if there's a new image file uploaded
-      if (files.petPicture && Object.keys(files.petPicture).length > 0) {
-        try {
-          const file = Array.isArray(files.petPicture) ? files.petPicture[0] : files.petPicture;
-          if (file && file.originalFilename) {
-            const fileExtension = path.extname(file.originalFilename);
-            const fileName = `pet_${userId}_${petId}_${Date.now()}${fileExtension}`;
-            const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-            await fs.mkdir(uploadDir, { recursive: true });
-            const targetPath = path.join(uploadDir, fileName);
-            await fs.copyFile(file.filepath, targetPath);
-            newImagePath = `/uploads/${fileName}`;
-            console.log('[PUT /pet/[id]] ✅ New image uploaded successfully:', fileName);
-          }
-        } catch (imageError) {
-          console.error('[PUT /pet/[id]] ❌ Error processing image file:', imageError);
-          // Keep existing image if there's an error
+      // Handle image updates - simplified like user profile update
+      let petPicture = undefined;
+      if (files.petPicture) {
+        const file = Array.isArray(files.petPicture) ? files.petPicture[0] : files.petPicture;
+        if (file && file.originalFilename) {
+          const fileExtension = path.extname(file.originalFilename);
+          const fileName = `pet_${userId}_${petId}_${Date.now()}${fileExtension}`;
+          const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+          await fs.mkdir(uploadDir, { recursive: true });
+          const targetPath = path.join(uploadDir, fileName);
+          await fs.copyFile(file.filepath, targetPath);
+          petPicture = `/uploads/${fileName}`;
+          console.log('[PUT /pet/[id]] ✅ New image uploaded successfully:', fileName);
         }
-      } else if (fields.petPicture !== undefined) {
-        // Handle image field from FormData
-        const petPictureField = Array.isArray(fields.petPicture) ? fields.petPicture[0] : fields.petPicture;
-        
-        console.log('[PUT /pet/[id]] petPictureField type:', typeof petPictureField);
-        console.log('[PUT /pet/[id]] petPictureField value:', petPictureField);
-        
-        if (petPictureField === '') {
-          // User removed the image - set to empty string
-          newImagePath = '';
-          console.log('[PUT /pet/[id]] Image removed by user');
-        } else if (typeof petPictureField === 'string' && (petPictureField.startsWith('/uploads') || petPictureField.startsWith('http'))) {
-          // Existing server image - keep it unchanged
-          newImagePath = petPictureField;
-          console.log('[PUT /pet/[id]] 🔒 Keeping existing server image:', petPictureField);
-        } else if (typeof petPictureField === 'object' && petPictureField.uri) {
-          // This is a React Native image object - this indicates a FormData issue
-          // For now, we'll skip the image update and keep the existing image
-          console.log('[PUT /pet/[id]] ⚠️ React Native image object detected in fields - skipping image update');
-          console.log('[PUT /pet/[id]] This is a known limitation with React Native FormData');
-          newImagePath = existingPet.petPicture;
-        }
-        // If petPictureField is undefined or null, we'll keep the existing image
       }
-    // Always update all fields to allow clearing values
+    // Only update fields that are present - like user profile update
     const data: Record<string, unknown> = {};
-    data.name = name;
-    data.birthdate = birthdate;
-    data.type = type;
-    data.breed = breed;
-    data.healthCondition = healthCondition;
+    if (name) data.name = name;
+    if (birthdate) data.birthdate = birthdate;
+    if (type) data.type = type;
+    if (breed) data.breed = breed;
+    if (healthCondition) data.healthCondition = healthCondition;
+    if (petPicture) data.petPicture = petPicture;
     
-    // Handle image update
-    if (newImagePath !== null) {
-      data.petPicture = newImagePath;
-    } else {
-      // Keep existing image if no change
-      data.petPicture = existingPet.petPicture;
+    if (Object.keys(data).length === 0) {
+      return res.status(400).json({ message: 'No valid fields to update.' });
     }
     
-          console.log('[PUT /pet/[id]] Data to update:', data);
+    console.log('[PUT /pet/[id]] Data to update:', data);
       
       try {
         const pet = await prisma.pet.update({
