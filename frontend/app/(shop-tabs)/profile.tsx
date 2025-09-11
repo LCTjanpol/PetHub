@@ -199,19 +199,33 @@ export default function ShopOwnerProfileScreen() {
           </View>
           
           <View style={styles.shopCard}>
-            <Image
-              source={
-                shopData.shopImage
-                  ? { uri: formatImageUrl(shopData.shopImage) || '' }
-                  : require('../../assets/images/shop.png')
-              }
-              style={styles.shopImage}
-            />
+            <View style={styles.shopImageBanner}>
+              <Image
+                source={
+                  shopData.shopImage
+                    ? { uri: formatImageUrl(shopData.shopImage) || '' }
+                    : require('../../assets/images/shop.png')
+                }
+                style={styles.shopBannerImage}
+              />
+              <View style={styles.shopStatusOverlay}>
+                <View style={[styles.statusBadge, { backgroundColor: shopData.isAvailable ? '#4CAF50' : '#F44336' }]}>
+                  <Text style={styles.statusText}>{shopData.isAvailable ? 'Open' : 'Closed'}</Text>
+                </View>
+              </View>
+            </View>
+            
             <View style={styles.shopInfo}>
               <Text style={styles.shopName}>{shopData.shopName || 'Not set'}</Text>
               <Text style={styles.shopType}>{shopData.shopType || 'Not set'}</Text>
-              <Text style={styles.shopLocation}>{shopData.shopLocation || 'Not set'}</Text>
-              <Text style={styles.shopContact}>{shopData.contactNumber || 'Not set'}</Text>
+              <View style={styles.locationContainer}>
+                <FontAwesome5 name="map-marker-alt" size={12} color="#4ECDC4" />
+                <Text style={styles.shopLocation}>{shopData.shopLocation || 'Not set'}</Text>
+              </View>
+              <View style={styles.contactContainer}>
+                <FontAwesome5 name="phone" size={12} color="#4ECDC4" />
+                <Text style={styles.shopContact}>{shopData.contactNumber || 'Not set'}</Text>
+              </View>
             </View>
           </View>
 
@@ -369,16 +383,52 @@ const styles = StyleSheet.create({
     color: '#666666',
   },
   shopCard: {
-    marginBottom: 15,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    marginBottom: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  shopImage: {
+  shopImageBanner: {
+    position: 'relative',
+    height: 120,
+  },
+  shopBannerImage: {
     width: '100%',
-    height: 150,
-    borderRadius: 10,
-    marginBottom: 15,
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  shopStatusOverlay: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  statusText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
   },
   shopInfo: {
-    marginBottom: 15,
+    padding: 16,
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  contactContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
   },
   shopName: {
     fontSize: 20,
