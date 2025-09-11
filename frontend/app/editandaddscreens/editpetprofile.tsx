@@ -36,118 +36,74 @@ const EditPetProfileScreen = () => {
 
   const fetchPet = useCallback(async () => {
     try {
-      console.log('[fetchPet] Starting fetch for pet ID:', petId);
-      console.log('[fetchPet] API Base URL:', process.env.EXPO_PUBLIC_API_URL || 'Not set, using platform default');
-      console.log('[fetchPet] Full API URL:', `${process.env.EXPO_PUBLIC_API_URL || 'Platform default'}/pet/${petId}`);
-      
       const token = await AsyncStorage.getItem('token');
       if (!token) {
-        console.error('[fetchPet] No token found');
-        Alert.alert('Error', 'No token found. Please log in again.');
+        Alert.alert('Authentication Required', 'Please log in again to view your pet profile.');
+        router.replace('/auth/login');
         return;
       }
-      
-      console.log('[fetchPet] Token found, making API call to:', ENDPOINTS.PET.DETAIL(petId));
-      console.log('[fetchPet] API Client base URL:', apiClient.defaults.baseURL);
       
       const response = await apiClient.get(ENDPOINTS.PET.DETAIL(petId), {
         headers: { Authorization: `Bearer ${token}` },
         timeout: 10000, // 10 second timeout
       });
       
-      console.log('[fetchPet] API response received:', {
-        status: response.status,
-        data: response.data,
-        hasName: !!response.data?.name,
-        hasType: !!response.data?.type,
-        hasBirthdate: !!response.data?.birthdate
-      });
-      
       if (!response.data) {
-        throw new Error('No data received from API');
+        throw new Error('No pet data received from server');
       }
       
-             // Ensure all fields are properly set, even if they're null/undefined
-       const petData = {
-         name: response.data.name || '',
-         petPicture: response.data.petPicture || '',
-         birthdate: response.data.birthdate || '',
-         type: response.data.type || '',
-         breed: response.data.breed || '',
-         healthCondition: response.data.healthCondition || ''
-       };
-       
-              console.log('[fetchPet] Setting pet state with:', petData);
-       console.log('[fetchPet] Pet picture from backend:', response.data.petPicture);
+      // Ensure all fields are properly set, even if they're null/undefined
+      const petData = {
+        name: response.data.name || '',
+        petPicture: response.data.petPicture || '',
+        birthdate: response.data.birthdate || '',
+        type: response.data.type || '',
+        breed: response.data.breed || '',
+        healthCondition: response.data.healthCondition || ''
+      };
         
-        setPet(petData);
-        setProfileImage(response.data.petPicture || null);
+      setPet(petData);
+      setProfileImage(response.data.petPicture || null);
       
-        if (response.data.birthdate) {
+      if (response.data.birthdate) {
         const birthDate = new Date(response.data.birthdate);
-        console.log('[fetchPet] Setting birthdate:', birthDate);
         setSelectedDate(birthDate);
       }
       
-      console.log('[fetchPet] Pet state updated successfully');
     } catch (error: any) {
-      console.error('[fetchPet] Error fetching pet:', error.message);
-      console.error('[fetchPet] Error details:', {
-        code: error.code,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        url: error.config?.url,
-        message: error.message
-      });
-      
-      let errorMessage = 'Failed to fetch pet profile. ';
+      let errorMessage = 'Unable to load your pet\'s profile. ';
       
       if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
-        errorMessage += 'Network connection failed. Please check if the backend server is running.';
+        errorMessage = 'Network connection failed. Please check your internet connection and try again.';
+      } else if (error.code === 'ECONNABORTED') {
+        errorMessage = 'The request is taking too long. Please check your connection and try again.';
+      } else if (error.code === 'ENOTFOUND') {
+        errorMessage = 'Unable to reach our servers. Please check your internet connection.';
       } else if (error.response?.status === 401) {
-        errorMessage += 'Authentication failed. Please log in again.';
+        errorMessage = 'Your session has expired. Please log in again.';
         router.replace('/auth/login');
       } else if (error.response?.status === 404) {
-        errorMessage += 'Pet not found. Please check the pet ID.';
+        errorMessage = 'Pet not found. This pet may have been deleted or you may not have permission to view it.';
       } else if (error.response?.status === 500) {
-        errorMessage += 'Server error. Please try again later.';
+        errorMessage = 'Server error. Please try again in a few moments.';
       } else {
-        errorMessage += error.message || 'Unknown error occurred.';
+        errorMessage = 'An unexpected error occurred while loading your pet\'s profile.';
       }
       
-      Alert.alert('Fetch Error', errorMessage);
+      Alert.alert('Loading Failed', errorMessage);
     } finally {
       setRefreshing(false);
     }
   }, [petId]);
 
   useEffect(() => {
-    console.log('[useEffect] Component mounted, fetching pet with ID:', petId);
-    console.log('[useEffect] Pet ID type:', typeof petId);
-    console.log('[useEffect] Pet ID value:', petId);
-    
     if (petId && petId.trim() !== '') {
-      console.log('[useEffect] Pet ID is valid, calling fetchPet');
       fetchPet();
     } else {
-      console.error('[useEffect] Invalid pet ID:', petId);
-      Alert.alert('Error', 'Invalid pet ID. Please try again.');
+      Alert.alert('Invalid Pet ID', 'Unable to load pet profile. Please try again from the pets list.');
+      router.back();
     }
-  }, [petId]); // Remove fetchPet from dependencies to avoid infinite loop
-
-  // Debug: Log pet state changes
-  useEffect(() => {
-    console.log('[useEffect] Pet state updated:', {
-      name: pet.name,
-      type: pet.type,
-      birthdate: pet.birthdate,
-      breed: pet.breed,
-      healthCondition: pet.healthCondition,
-      petPicture: pet.petPicture
-    });
-    console.log('[useEffect] Profile image state:', profileImage);
-    console.log('[useEffect] Is pet data loaded:', !!(pet.name && pet.type && pet.birthdate));
-  }, [pet, profileImage]);
+  }, [petId, fetchPet]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -173,9 +129,18 @@ const EditPetProfileScreen = () => {
         
         setProfileImage(image.uri);
       }
-    } catch (error) {
-      console.error('[pickImage] Error:', error);
-      Alert.alert('Error', 'Failed to pick image. Please try again.');
+    } catch (error: any) {
+      let errorMessage = 'Failed to select image. Please try again.';
+      
+      if (error.message?.includes('cancelled')) {
+        return; // User cancelled, no need to show error
+      } else if (error.message?.includes('permission')) {
+        errorMessage = 'Camera roll access is required to select photos. Please check your app permissions in Settings.';
+      } else if (error.message?.includes('network')) {
+        errorMessage = 'Network error while selecting image. Please check your connection.';
+      }
+      
+      Alert.alert('Image Selection Failed', errorMessage);
     }
   };
 
@@ -233,54 +198,35 @@ const EditPetProfileScreen = () => {
       formData.append('breed', pet.breed);
       formData.append('healthCondition', pet.healthCondition);
       
-      // 🚀 SMART FIX: Handle image updates properly for React Native
+      // Handle image updates properly for React Native
       if (profileImage === null) {
         // User removed the image
         formData.append('petPicture', '');
-        console.log('[handleSave] 🗑️ Image removed, sending empty string');
       } else if (profileImage && profileImage.startsWith('file://')) {
-        // ✅ New local image from ImagePicker - MUST be uploaded as file
+        // New local image from ImagePicker - upload as file
         const imageFile = {
           uri: profileImage,
           type: 'image/jpeg',
           name: `pet_${Date.now()}.jpg`,
         };
         
-        // CRITICAL: This MUST go to files, not fields
         formData.append('petPicture', imageFile as any);
-        console.log('[handleSave] ✅ New image added as file object for upload:', imageFile);
       } else if (profileImage && (profileImage.startsWith('/uploads') || profileImage.startsWith('http'))) {
         // Existing server image - keep it
         formData.append('petPicture', profileImage);
-        console.log('[handleSave] 🔒 Keeping existing server image:', profileImage);
       } else if (pet.petPicture && pet.petPicture.startsWith('file://')) {
         // Current pet has corrupted local file URI - clean it up
         formData.append('petPicture', '');
-        console.log('[handleSave] 🧹 Cleaning corrupted local file URI, removing image');
       } else if (profileImage === pet.petPicture) {
         // No image change - keep existing
         formData.append('petPicture', pet.petPicture || '');
-        console.log('[handleSave] 🔄 No image change, keeping existing:', pet.petPicture);
       } else {
         // Fallback: no image change
         formData.append('petPicture', pet.petPicture || '');
-        console.log('[handleSave] 🔄 Fallback: no image change, keeping existing:', pet.petPicture);
       }
 
 
 
-      
-      
-      console.log('[handleSave] Sending update request to:', ENDPOINTS.PET.UPDATE(petId));
-      console.log('[handleSave] Form data being sent:', {
-        name: pet.name,
-        type: pet.type,
-        breed: pet.breed,
-        birthdate: pet.birthdate,
-        healthCondition: pet.healthCondition,
-        hasImage: !!profileImage
-      });
-      
       const response = await apiClient.put(ENDPOINTS.PET.UPDATE(petId), formData, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -289,14 +235,8 @@ const EditPetProfileScreen = () => {
         timeout: 30000, // 30 second timeout for image uploads
       });
       
-      console.log('[handleSave] Update response status:', response.status);
-      console.log('[handleSave] Update response data:', response.data);
-      
       // Update local state with the response data
       if (response.data) {
-        console.log('[handleSave] Update successful, response data:', response.data);
-        console.log('[handleSave] Updated pet picture:', response.data.petPicture);
-        
         // Update pet state with new data
         const updatedPet = {
           name: response.data.name || '',
@@ -312,14 +252,12 @@ const EditPetProfileScreen = () => {
         // Update profile image state - use the new server path
         if (response.data.petPicture) {
           setProfileImage(response.data.petPicture);
-          console.log('[handleSave] Profile image updated to:', response.data.petPicture);
         } else {
           setProfileImage(null);
-          console.log('[handleSave] Profile image cleared');
         }
         
         // Show success message and navigate back
-        Alert.alert('Success', 'Pet profile updated successfully!', [
+        Alert.alert('Success! 🎉', 'Your pet\'s profile has been updated successfully!', [
           {
             text: 'OK',
             onPress: () => {
@@ -332,37 +270,36 @@ const EditPetProfileScreen = () => {
         throw new Error('No response data received from server');
       }
     } catch (error: any) {
-      console.error('[handleSave] Error:', error.message, error.stack);
-      console.error('[handleSave] Error details:', {
-        code: error.code,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        url: error.config?.url,
-        method: error.config?.method,
-        data: error.response?.data
-      });
-      
-      let errorMessage = 'Failed to update pet profile. Please try again.';
+      let errorMessage = 'Failed to update your pet\'s profile. Please try again.';
       
       if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
-        errorMessage = 'Network connection failed. Please check:\n\n1. Your internet connection\n2. If the backend server is running\n3. Try again in a few moments';
+        errorMessage = 'Network connection failed. Please check your internet connection and try again.';
       } else if (error.code === 'ECONNABORTED') {
-        errorMessage = 'Request timeout. Please check your internet connection and try again.';
+        errorMessage = 'The update is taking too long. Please check your internet connection and try again.';
       } else if (error.code === 'ENOTFOUND') {
-        errorMessage = 'Unable to reach the server. Please check if the backend is running.';
+        errorMessage = 'Unable to reach our servers. Please check your internet connection.';
       } else if (error.code === 'ECONNREFUSED') {
-        errorMessage = 'Connection refused. The server may be down or not accessible.';
+        errorMessage = 'Unable to connect to our servers. Please try again in a few moments.';
       } else if (error.response?.status === 400) {
-        errorMessage = error.response.data?.message || 'Invalid pet data. Please check your input.';
+        const backendMessage = error.response.data?.message;
+        if (backendMessage?.includes('name')) {
+          errorMessage = 'Please check your pet\'s name and try again.';
+        } else if (backendMessage?.includes('type')) {
+          errorMessage = 'Please select a valid pet type and try again.';
+        } else if (backendMessage?.includes('image')) {
+          errorMessage = 'There was an issue with the pet image. Please try selecting a different image.';
+        } else {
+          errorMessage = backendMessage || 'Please check your pet\'s information and try again.';
+        }
       } else if (error.response?.status === 401) {
-        errorMessage = 'Authentication failed. Please log in again.';
+        errorMessage = 'Your session has expired. Please log in again.';
         router.replace('/auth/login');
       } else if (error.response?.status === 404) {
-        errorMessage = 'Pet not found. Please refresh and try again.';
+        errorMessage = 'Pet not found. This pet may have been deleted or you may not have permission to edit it.';
+      } else if (error.response?.status === 413) {
+        errorMessage = 'Your pet\'s image is too large. Please choose a smaller image and try again.';
       } else if (error.response?.status === 500) {
-        errorMessage = 'Server error. Please try again later.';
-      } else if (error.message) {
-        errorMessage = error.message;
+        errorMessage = 'Server error. Please try again in a few moments.';
       }
       
       Alert.alert('Update Failed', errorMessage);
@@ -392,33 +329,24 @@ const EditPetProfileScreen = () => {
               const response = await apiClient.delete(ENDPOINTS.PET.DELETE(petId), {
                 headers: { Authorization: `Bearer ${token}` },
               });
-              console.log('[handleDelete] Delete response:', response.status, response.data);
-              Alert.alert('Success', 'Pet deleted successfully!');
+              Alert.alert('Success! 🎉', 'Your pet has been deleted successfully.');
               router.back(); // Use router.back() instead of navigation.goBack()
             } catch (error: any) {
-              console.error('[handleDelete] Error:', error.message, error.stack);
-              console.error('[handleDelete] Error details:', {
-                code: error.code,
-                status: error.response?.status,
-                statusText: error.response?.statusText,
-                url: error.config?.url,
-                method: error.config?.method,
-                data: error.response?.data
-              });
-              
-              let errorMessage = 'Failed to delete pet. Please try again.';
+              let errorMessage = 'Failed to delete your pet. Please try again.';
               
               if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
-                errorMessage = 'Network connection failed. Please check your internet connection.';
+                errorMessage = 'Network connection failed. Please check your internet connection and try again.';
+              } else if (error.code === 'ECONNABORTED') {
+                errorMessage = 'The request is taking too long. Please check your connection and try again.';
               } else if (error.response?.status === 401) {
-                errorMessage = 'Authentication failed. Please log in again.';
+                errorMessage = 'Your session has expired. Please log in again.';
                 router.replace('/auth/login');
               } else if (error.response?.status === 404) {
-                errorMessage = 'Pet not found. Please refresh and try again.';
+                errorMessage = 'Pet not found. This pet may have already been deleted.';
+              } else if (error.response?.status === 403) {
+                errorMessage = 'You don\'t have permission to delete this pet.';
               } else if (error.response?.status === 500) {
-                errorMessage = 'Server error. Please try again later.';
-              } else if (error.message) {
-                errorMessage = error.message;
+                errorMessage = 'Server error. Please try again in a few moments.';
               }
               
               Alert.alert('Delete Failed', errorMessage);
@@ -466,15 +394,11 @@ const EditPetProfileScreen = () => {
                           : require('../../assets/images/pet.png') // Default image
                   }
                   style={styles.petImage}
-                  onError={(error) => {
-                    console.log('[Image] Error loading image:', error.nativeEvent);
-                    console.log('[Image] Failed source:', profileImage || pet.petPicture);
-                    console.log('[Image] Profile image state:', profileImage);
-                    console.log('[Image] Pet picture field:', pet.petPicture);
+                  onError={() => {
+                    // Image failed to load, will fallback to default
                   }}
                   onLoad={() => {
-                    console.log('[Image] Image loaded successfully');
-                    console.log('[Image] Source:', profileImage || pet.petPicture);
+                    // Image loaded successfully
                   }}
                 />
                <TouchableOpacity style={styles.cameraButton} onPress={pickImage}>

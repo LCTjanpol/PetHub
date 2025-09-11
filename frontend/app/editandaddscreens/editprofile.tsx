@@ -97,8 +97,17 @@ const EditProfileScreen = () => {
         setProfileImage(selectedImage.uri);
       }
     } catch (error: any) {
-      console.error('Image picker error:', error);
-      Alert.alert('Error', `Failed to pick image: ${error.message || 'Please try again.'}`);
+      let errorMessage = 'Failed to select image. Please try again.';
+      
+      if (error.message?.includes('cancelled')) {
+        return; // User cancelled, no need to show error
+      } else if (error.message?.includes('permission')) {
+        errorMessage = 'Camera roll access is required to select photos. Please check your app permissions.';
+      } else if (error.message?.includes('network')) {
+        errorMessage = 'Network error while selecting image. Please check your connection.';
+      }
+      
+      Alert.alert('Image Selection Failed', errorMessage);
     }
   };
 
@@ -134,21 +143,12 @@ const EditProfileScreen = () => {
         }
       }
 
-      console.log('Updating profile with data:', {
-        fullName: user.fullName,
-        birthdate: user.birthdate,
-        gender: user.gender,
-        hasImage: !!profileImage
-      });
-
       const response = await apiClient.put(ENDPOINTS.USER.PROFILE, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
       });
-
-      console.log('Profile update response:', response.data);
 
       // Update local user data with new image if it was changed
       const newProfilePicture = profileImage && (profileImage.startsWith('file://') || profileImage.startsWith('content://') || profileImage.startsWith('http://localhost')) 
@@ -179,9 +179,35 @@ const EditProfileScreen = () => {
       Alert.alert('Success', 'Profile updated successfully!');
       router.back();
     } catch (error: any) {
-      console.error('Profile update error:', error);
-      console.error('Error response:', error.response?.data);
-      Alert.alert('Error', `Failed to update profile: ${error.response?.data?.message || error.message}`);
+      let errorMessage = 'Failed to update your profile. Please try again.';
+      
+      if (error.code === 'ECONNABORTED') {
+        errorMessage = 'The update is taking too long. Please check your internet connection and try again.';
+      } else if (error.code === 'NETWORK_ERROR') {
+        errorMessage = 'Network connection issue. Please check your internet connection and try again.';
+      } else if (error.code === 'ENOTFOUND') {
+        errorMessage = 'Unable to reach our servers. Please check your connection and try again.';
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Your session has expired. Please log in again.';
+        router.replace('/auth/login');
+      } else if (error.response?.status === 400) {
+        const backendMessage = error.response.data?.message;
+        if (backendMessage?.includes('image')) {
+          errorMessage = 'There was an issue with your profile image. Please try selecting a different image.';
+        } else if (backendMessage?.includes('name')) {
+          errorMessage = 'Please check your name and try again.';
+        } else {
+          errorMessage = backendMessage || 'Please check your information and try again.';
+        }
+      } else if (error.response?.status === 413) {
+        errorMessage = 'Your profile image is too large. Please choose a smaller image and try again.';
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Server error. Please try again in a few moments.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      Alert.alert('Profile Update Failed', errorMessage);
     } finally {
       setUpdating(false);
     }

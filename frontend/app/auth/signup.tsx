@@ -79,35 +79,62 @@ export default function RegisterScreen() {
   };
 
   const handleRegister = async () => {
-    console.log('Register button pressed'); 
-
-    // Validate inputs
-    if (!fullName || !email || !birthdate || !gender || !password || !confirmPassword) {
-      Alert.alert("Error", "Please fill in all fields");
+    // Enhanced input validation with user-friendly messages
+    if (!fullName?.trim()) {
+      Alert.alert("Missing Information", "Please enter your full name to continue.");
       return;
     }
 
-    if (password !== confirmPassword) {
-      Alert.alert("Error", "Password does not match");
-      setConfirmBorderColor('red');
+    if (!email?.trim()) {
+      Alert.alert("Missing Information", "Please enter your email address to continue.");
+      return;
+    }
+
+    // Enhanced email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      Alert.alert("Invalid Email", "Please enter a valid email address (e.g., example@email.com).");
+      return;
+    }
+
+    if (!birthdate) {
+      Alert.alert("Missing Information", "Please select your birthdate to continue.");
+      return;
+    }
+
+    if (!gender) {
+      Alert.alert("Missing Information", "Please select your gender to continue.");
+      return;
+    }
+
+    if (!password) {
+      Alert.alert("Missing Information", "Please create a password to continue.");
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert("Error", "Password must be at least 6 characters long");
+      Alert.alert("Weak Password", "Your password must be at least 6 characters long for security.");
+      return;
+    }
+
+    if (!confirmPassword) {
+      Alert.alert("Missing Information", "Please confirm your password to continue.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert("Password Mismatch", "The passwords you entered don't match. Please check and try again.");
+      setConfirmBorderColor('red');
       return;
     }
 
     setIsLoading(true); 
 
     try {
-      console.log('Starting registration...'); 
-      
       let response;
       
       if (profileImage) {
         // Use form data for image upload
-        console.log('Creating form data for image upload...'); 
         const formData = new FormData();
         formData.append('fullName', fullName.trim());
         formData.append('email', email.trim().toLowerCase());
@@ -121,7 +148,6 @@ export default function RegisterScreen() {
           name: 'profile.jpg',
         } as any);
 
-        console.log('Sending registration request with image...'); 
         response = await axios.post(`${API_URL}${ENDPOINTS.AUTH.REGISTER}`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
@@ -130,7 +156,6 @@ export default function RegisterScreen() {
         });
       } else {
         // Use simple JSON registration (much faster)
-        console.log('Sending simple registration request...'); 
         response = await apiClient.post(ENDPOINTS.AUTH.REGISTER_SIMPLE, {
           fullName: fullName.trim(),
           email: email.trim().toLowerCase(),
@@ -140,40 +165,56 @@ export default function RegisterScreen() {
         });
       }
 
-      console.log('Registration response:', response.data); 
-
       if (response.data.success) {
         Alert.alert(
-          "Registration Successful",
-          "Congratulations! You have successfully registered.",
+          "Welcome to PetHub! 🎉",
+          "Your account has been created successfully. You can now sign in and start connecting with the pet community.",
           [
             {
-              text: "Go to Login",
+              text: "Sign In Now",
               onPress: () => router.push('/auth/login')
             }
           ]
         );
       } else {
-        Alert.alert("Registration Failed", response.data.message || "An error occurred during registration");
+        Alert.alert("Registration Issue", response.data.message || "We couldn't create your account at this time. Please try again.");
       }
     } catch (error: any) {
-      console.error('[handleRegister] Error:', error.message, error.stack);
-      let message = "An error occurred during registration. Please try again.";
+      let message = "We encountered an issue creating your account. Please try again.";
       
       if (error.code === 'ECONNABORTED') {
-        message = 'Connection timeout. Please check your internet connection and try again.';
+        message = 'The connection is taking too long. Please check your internet connection and try again.';
       } else if (error.code === 'NETWORK_ERROR') {
-        message = 'Network error. Please check your connection and try again.';
+        message = 'Network connection issue detected. Please check your internet connection and try again.';
+      } else if (error.code === 'ENOTFOUND') {
+        message = 'Unable to reach our servers. Please check your internet connection and try again.';
+      } else if (error.code === 'ECONNREFUSED') {
+        message = 'Our servers are currently unavailable. Please try again in a few moments.';
       } else if (error.response?.status === 400) {
-        message = error.response.data.message || 'Invalid registration data. Please check your information.';
+        const backendMessage = error.response.data.message;
+        if (backendMessage?.includes('email')) {
+          message = 'Please check your email format and try again.';
+        } else if (backendMessage?.includes('password')) {
+          message = 'Please check your password requirements and try again.';
+        } else {
+          message = backendMessage || 'Please check your information and try again.';
+        }
       } else if (error.response?.status === 409) {
-        message = 'Email already exists. Please use a different email address.';
+        message = 'An account with this email already exists. Please use a different email address or try signing in instead.';
+      } else if (error.response?.status === 413) {
+        message = 'Your profile image is too large. Please choose a smaller image (under 15MB) and try again.';
       } else if (error.response?.status === 500) {
-        message = 'Server error. Please try again later.';
+        message = 'Server error. Please try again in a few moments.';
       } else if (error.response?.data?.message) {
-        message = error.response.data.message;
-      } else if (error.message) {
-        message = error.message;
+        // Convert technical messages to user-friendly ones
+        const techMessage = error.response.data.message;
+        if (techMessage.includes('duplicate') || techMessage.includes('unique')) {
+          message = 'An account with this email already exists. Please use a different email address.';
+        } else if (techMessage.includes('validation')) {
+          message = 'Please check your information and ensure all fields are filled correctly.';
+        } else {
+          message = 'We encountered an issue with your registration. Please try again.';
+        }
       }
       
       Alert.alert("Registration Failed", message);

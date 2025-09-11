@@ -191,9 +191,18 @@ export default function EditShopScreen() {
           setUserProfileImage(asset.uri);
         }
       }
-    } catch (error) {
-      console.error('[handleImagePick] Error:', error);
-      Alert.alert('Error', 'Failed to pick image. Please try again.');
+    } catch (error: any) {
+      let errorMessage = 'Failed to select image. Please try again.';
+      
+      if (error.message?.includes('cancelled')) {
+        return; // User cancelled, no need to show error
+      } else if (error.message?.includes('permission')) {
+        errorMessage = 'Camera roll access is required to select photos. Please check your app permissions in Settings.';
+      } else if (error.message?.includes('network')) {
+        errorMessage = 'Network error while selecting image. Please check your connection.';
+      }
+      
+      Alert.alert('Image Selection Failed', errorMessage);
     }
   };
 
@@ -282,16 +291,34 @@ export default function EditShopScreen() {
         }
       }
     } catch (error: any) {
-      console.error('[handleSaveChanges] Error:', error.message, error.stack);
-      let errorMessage = 'Failed to update profile. Please try again.';
+      let errorMessage = `Failed to update ${editMode === 'shop' ? 'shop' : 'user'} profile. Please try again.`;
       
-      if (error.response?.status === 401) {
-        errorMessage = 'Session expired. Please log in again.';
+      if (error.code === 'ECONNABORTED') {
+        errorMessage = 'The update is taking too long. Please check your internet connection and try again.';
+      } else if (error.code === 'NETWORK_ERROR') {
+        errorMessage = 'Network connection issue. Please check your internet connection and try again.';
+      } else if (error.code === 'ENOTFOUND') {
+        errorMessage = 'Unable to reach our servers. Please check your connection and try again.';
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Your session has expired. Please log in again.';
         router.replace('/auth/login');
+      } else if (error.response?.status === 400) {
+        const backendMessage = error.response.data?.message;
+        if (backendMessage?.includes('image')) {
+          errorMessage = 'There was an issue with the image you selected. Please try a different image.';
+        } else if (backendMessage?.includes('name')) {
+          errorMessage = 'Please check the name field and try again.';
+        } else if (backendMessage?.includes('email')) {
+          errorMessage = 'Please check the email format and try again.';
+        } else {
+          errorMessage = backendMessage || 'Please check your information and try again.';
+        }
+      } else if (error.response?.status === 413) {
+        errorMessage = 'The image you selected is too large. Please choose a smaller image and try again.';
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Server error. Please try again in a few moments.';
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
       }
       
       Alert.alert('Update Failed', errorMessage);
