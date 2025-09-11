@@ -118,6 +118,12 @@ const ShopApplication = () => {
 
   const pickImage = async () => {
     try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Please grant camera roll permissions to upload images.');
+        return;
+      }
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: [ImagePicker.MediaType.Images],
         allowsEditing: true,
@@ -128,9 +134,16 @@ const ShopApplication = () => {
       if (!result.canceled && result.assets[0]) {
         setShopImage(result.assets[0].uri);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to pick image');
+      if (error.code === 'E_NO_CAMERA_PERMISSION') {
+        Alert.alert('Permission Required', 'Please grant camera roll permissions in your device settings.');
+      } else if (error.code === 'E_PICKER_CANCELLED') {
+        // User cancelled, no need to show error
+        return;
+      } else {
+        Alert.alert('Error', 'Failed to pick image. Please try again.');
+      }
     }
   };
 

@@ -140,36 +140,51 @@ export default function ShopsScreen() {
 
   const renderShopItem = ({ item }: { item: Shop }) => (
     <View style={styles.shopCard}>
-      <View style={styles.shopHeader}>
-        <View style={styles.shopImageContainer}>
-          {item.shopImage && item.shopImage.trim() !== '' ? (
-            <Image
-              source={{ uri: formatImageUrl(item.shopImage) || '' }}
-              style={styles.shopImage}
-              onError={() => console.log('[Shop Image] Failed to load:', item.shopImage)}
-            />
-          ) : (
-            <View style={[styles.shopImage, styles.placeholderImage]}>
-              <FontAwesome5 name="store" size={24} color="#999999" />
-            </View>
-          )}
+      {/* Shop Image Banner */}
+      <View style={styles.shopImageBanner}>
+        {item.shopImage && item.shopImage.trim() !== '' ? (
+          <Image
+            source={{ uri: formatImageUrl(item.shopImage) || '' }}
+            style={styles.shopBannerImage}
+            onError={() => console.log('[Shop Image] Failed to load:', item.shopImage)}
+          />
+        ) : (
+          <View style={[styles.shopBannerImage, styles.placeholderBanner]}>
+            <FontAwesome5 name="store" size={32} color="#999999" />
+          </View>
+        )}
+        <View style={styles.shopStatusOverlay}>
+          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.isAvailable) }]}>
+            <Text style={styles.statusText}>{getStatusText(item.isAvailable)}</Text>
+          </View>
         </View>
-        <View style={styles.shopDetails}>
-          <Text style={styles.shopName}>{item.shopName || 'Unnamed Shop'}</Text>
-          <Text style={styles.shopType}>{item.shopType || 'Unknown Type'}</Text>
-          <Text style={styles.shopLocation}>{item.shopLocation || 'Location not specified'}</Text>
-          <Text style={styles.ownerName}>by {item.user?.fullName || item.user?.name || 'Unknown'}</Text>
-                      <View style={styles.shopStats}>
-              <View style={styles.ratingContainer}>
-                <FontAwesome5 name="star" size={12} color="#FFEAA7" solid />
-                <Text style={styles.ratingText}>{(item.rating || 0).toFixed(1)}</Text>
-                <Text style={styles.reviewsText}>({item.totalReviews || 0})</Text>
-              </View>
-              <Text style={styles.hoursText}>{item.openingTime || 'N/A'} - {item.closingTime || 'N/A'}</Text>
+      </View>
+
+      {/* Shop Details */}
+      <View style={styles.shopContent}>
+        <View style={styles.shopHeader}>
+          <View style={styles.shopInfo}>
+            <Text style={styles.shopName}>{item.shopName || 'Unnamed Shop'}</Text>
+            <Text style={styles.shopType}>{item.shopType || 'Unknown Type'}</Text>
+            <View style={styles.locationContainer}>
+              <FontAwesome5 name="map-marker-alt" size={12} color="#4ECDC4" />
+              <Text style={styles.shopLocation}>{item.shopLocation || 'Location not specified'}</Text>
             </View>
+            <Text style={styles.ownerName}>Owner: {item.user?.fullName || item.user?.name || 'Unknown'}</Text>
+          </View>
         </View>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.isAvailable) }]}>
-          <Text style={styles.statusText}>{getStatusText(item.isAvailable)}</Text>
+
+        {/* Shop Stats */}
+        <View style={styles.shopStats}>
+          <View style={styles.ratingContainer}>
+            <FontAwesome5 name="star" size={14} color="#FFEAA7" solid />
+            <Text style={styles.ratingText}>{(item.rating || 0).toFixed(1)}</Text>
+            <Text style={styles.reviewsText}>({item.totalReviews || 0} reviews)</Text>
+          </View>
+          <View style={styles.hoursContainer}>
+            <FontAwesome5 name="clock" size={12} color="#666666" />
+            <Text style={styles.hoursText}>{item.openingTime || 'N/A'} - {item.closingTime || 'N/A'}</Text>
+          </View>
         </View>
       </View>
       
@@ -401,34 +416,47 @@ const styles = StyleSheet.create({
   shopCard: {
     backgroundColor: '#FFFFFF',
     marginHorizontal: 20,
-    marginBottom: 16,
-    borderRadius: 12,
-    padding: 16,
+    marginBottom: 20,
+    borderRadius: 16,
+    overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  shopHeader: {
-    flexDirection: 'row',
-    marginBottom: 12,
+  shopImageBanner: {
+    position: 'relative',
+    height: 120,
   },
-  shopImageContainer: {
-    marginRight: 12,
+  shopBannerImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
-  shopImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-  },
-  placeholderImage: {
+  placeholderBanner: {
     backgroundColor: '#F0F0F0',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  shopDetails: {
+  shopStatusOverlay: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+  },
+  shopContent: {
+    padding: 16,
+  },
+  shopHeader: {
+    marginBottom: 12,
+  },
+  shopInfo: {
     flex: 1,
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
   },
   shopName: {
     fontSize: 18,
@@ -456,13 +484,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
   },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   ratingText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: '#0E0F0F',
     marginLeft: 4,
@@ -470,11 +501,16 @@ const styles = StyleSheet.create({
   reviewsText: {
     fontSize: 12,
     color: '#999999',
-    marginLeft: 2,
+    marginLeft: 4,
+  },
+  hoursContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   hoursText: {
     fontSize: 12,
     color: '#666666',
+    marginLeft: 4,
   },
   statusBadge: {
     paddingHorizontal: 8,

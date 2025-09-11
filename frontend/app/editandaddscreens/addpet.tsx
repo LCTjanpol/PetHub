@@ -48,6 +48,12 @@ export default function AddPetScreen() {
 
   const pickImage = async () => {
     try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Please grant camera roll permissions to upload images.');
+        return;
+      }
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: [ImagePicker.MediaType.Images],
         allowsEditing: true,
@@ -63,9 +69,16 @@ export default function AddPetScreen() {
         }
         setPetImage(result.assets[0].uri);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('[pickImage] Error:', error);
-      Alert.alert('Error', 'Failed to pick image. Please try again.');
+      if (error.code === 'E_NO_CAMERA_PERMISSION') {
+        Alert.alert('Permission Required', 'Please grant camera roll permissions in your device settings.');
+      } else if (error.code === 'E_PICKER_CANCELLED') {
+        // User cancelled, no need to show error
+        return;
+      } else {
+        Alert.alert('Error', 'Failed to pick image. Please try again.');
+      }
     }
   };
 

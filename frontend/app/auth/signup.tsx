@@ -35,20 +35,38 @@ export default function RegisterScreen() {
   };
 
   const handleImagePick = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: [ImagePicker.MediaType.Images],
-      quality: 1,
-      allowsEditing: true, // Enable cropping
-      aspect: [1, 1], // Force square crop for profile
-    });
-    if (!result.canceled) {
-      const asset = result.assets[0];
-      // Check file size (Expo returns size in bytes)
-      if (asset.fileSize && asset.fileSize > 15 * 1024 * 1024) {
-        Alert.alert('Error', 'Profile image exceeds 15MB. Please choose a smaller image.');
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Please grant camera roll permissions to upload images.');
         return;
       }
-      setProfileImage(asset.uri);
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: [ImagePicker.MediaType.Images],
+        quality: 1,
+        allowsEditing: true, // Enable cropping
+        aspect: [1, 1], // Force square crop for profile
+      });
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+        // Check file size (Expo returns size in bytes)
+        if (asset.fileSize && asset.fileSize > 15 * 1024 * 1024) {
+          Alert.alert('Error', 'Profile image exceeds 15MB. Please choose a smaller image.');
+          return;
+        }
+        setProfileImage(asset.uri);
+      }
+    } catch (error: any) {
+      console.error('Error picking image:', error);
+      if (error.code === 'E_NO_CAMERA_PERMISSION') {
+        Alert.alert('Permission Required', 'Please grant camera roll permissions in your device settings.');
+      } else if (error.code === 'E_PICKER_CANCELLED') {
+        // User cancelled, no need to show error
+        return;
+      } else {
+        Alert.alert('Error', 'Failed to pick image. Please try again.');
+      }
     }
   };
 
