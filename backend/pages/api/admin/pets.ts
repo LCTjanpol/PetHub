@@ -27,7 +27,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       console.log(`[adminHandler] Successfully fetched ${pets.length} pets`);
       return res.status(200).json(pets);
     } catch (error) {
-      console.error('[adminHandler] Error fetching pets:', error.message, error.stack);
+      console.error('[adminHandler] Error fetching pets:', error instanceof Error ? error.message : 'Unknown error', error instanceof Error ? error.stack : '');
       return res.status(500).json({ message: 'Failed to fetch pets data' });
     }
   }
