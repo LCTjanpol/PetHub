@@ -14,6 +14,10 @@ export const config = {
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   const userId = req.user?.userId;
 
+  if (!userId) {
+    return res.status(401).json({ message: 'Authentication required' });
+  }
+
   if (req.method === 'POST') {
     // Parse multipart/form-data
     const form = formidable({
