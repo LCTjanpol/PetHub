@@ -277,7 +277,7 @@ export default function EditShopOwnerProfileScreen() {
               <Text style={[styles.dateText, !birthdate && styles.placeholderText]}>
                 {birthdate || 'Select birthdate'}
               </Text>
-              <FontAwesome5 name="calendar" size={16} color="#4ECDC4" />
+              <FontAwesome5 name="calendar" size={16} color="#0E0F0F" />
             </TouchableOpacity>
             {showDatePicker && (
               <DateTimePicker
@@ -452,7 +452,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#4ECDC4',
+    backgroundColor: '#0E0F0F',
     borderRadius: 20,
     padding: 8,
   },

@@ -198,30 +198,22 @@ const EditPetProfileScreen = () => {
       formData.append('breed', pet.breed);
       formData.append('healthCondition', pet.healthCondition);
       
-      // Handle image updates properly for React Native
-      if (profileImage === null) {
-        // User removed the image
-        formData.append('petPicture', '');
-      } else if (profileImage && profileImage.startsWith('file://')) {
-        // New local image from ImagePicker - upload as file
-        const imageFile = {
-          uri: profileImage,
-          type: 'image/jpeg',
-          name: `pet_${Date.now()}.jpg`,
-        };
-        
-        formData.append('petPicture', imageFile as any);
-      } else if (profileImage && (profileImage.startsWith('/uploads') || profileImage.startsWith('http'))) {
-        // Existing server image - keep it
-        formData.append('petPicture', profileImage);
-      } else if (pet.petPicture && pet.petPicture.startsWith('file://')) {
-        // Current pet has corrupted local file URI - clean it up
-        formData.append('petPicture', '');
-      } else if (profileImage === pet.petPicture) {
-        // No image change - keep existing
-        formData.append('petPicture', pet.petPicture || '');
+      // Handle image updates
+      if (profileImage && profileImage !== pet.petPicture) {
+        if (profileImage.startsWith('file://') || profileImage.startsWith('content://')) {
+          // New local image from ImagePicker
+          const imageFile = {
+            uri: profileImage,
+            type: 'image/jpeg',
+            name: `pet_${Date.now()}.jpg`,
+          };
+          formData.append('petPicture', imageFile as any);
+        } else {
+          // Existing server image
+          formData.append('petPicture', profileImage);
+        }
       } else {
-        // Fallback: no image change
+        // No image change - keep existing
         formData.append('petPicture', pet.petPicture || '');
       }
 

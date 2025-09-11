@@ -81,12 +81,12 @@ export default function EditShopProfileScreen() {
         return;
       }
 
-      const response = await apiClient.get(ENDPOINTS.USER.SHOP_STATUS, {
+      const response = await apiClient.get(ENDPOINTS.SHOP.PROFILE, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      if (response.data.success && response.data.data.hasShop) {
-        const shop = response.data.data.shop;
+      if (response.data.success) {
+        const shop = response.data.data || response.data;
         setShopData(shop);
         setShopName(shop.shopName || '');
         setBio(shop.bio || '');
@@ -95,7 +95,7 @@ export default function EditShopProfileScreen() {
         setOpeningTime(shop.openingTime || '');
         setClosingTime(shop.closingTime || '');
         setShopType(shop.shopType || '');
-        setIsAvailable(shop.isAvailable || true);
+        setIsAvailable(shop.isAvailable !== undefined ? shop.isAvailable : true);
         setSelectedDays(shop.availableDays || []);
         setSelectedImage(shop.shopImage || null);
       } else {
@@ -149,25 +149,7 @@ export default function EditShopProfileScreen() {
   };
 
   const handleSave = async () => {
-    if (!shopName.trim()) {
-      Alert.alert('Error', 'Shop name is required');
-      return;
-    }
-
-    if (!contactNumber.trim()) {
-      Alert.alert('Error', 'Contact number is required');
-      return;
-    }
-
-    if (!shopLocation.trim()) {
-      Alert.alert('Error', 'Shop location is required');
-      return;
-    }
-
-    if (selectedDays.length === 0) {
-      Alert.alert('Error', 'Please select at least one available day');
-      return;
-    }
+    // All fields are optional for editing - no validation required
 
     try {
       setIsSaving(true);
@@ -178,13 +160,13 @@ export default function EditShopProfileScreen() {
       }
 
       const formData = new FormData();
-      formData.append('shopName', shopName.trim());
-      formData.append('bio', bio.trim());
-      formData.append('contactNumber', contactNumber.trim());
-      formData.append('shopLocation', shopLocation.trim());
-      formData.append('openingTime', openingTime.trim());
-      formData.append('closingTime', closingTime.trim());
-      formData.append('shopType', shopType.trim());
+      formData.append('shopName', shopName.trim() || '');
+      formData.append('bio', bio.trim() || '');
+      formData.append('contactNumber', contactNumber.trim() || '');
+      formData.append('shopLocation', shopLocation.trim() || '');
+      formData.append('openingTime', openingTime.trim() || '');
+      formData.append('closingTime', closingTime.trim() || '');
+      formData.append('shopType', shopType.trim() || '');
       formData.append('isAvailable', isAvailable.toString());
       formData.append('availableDays', JSON.stringify(selectedDays));
 
@@ -197,7 +179,7 @@ export default function EditShopProfileScreen() {
       }
 
       const response = await apiClient.put(
-        ENDPOINTS.SHOP.UPDATE,
+        ENDPOINTS.SHOP.PROFILE,
         formData,
         {
           headers: {
@@ -276,7 +258,7 @@ export default function EditShopProfileScreen() {
           <Text style={styles.sectionTitle}>Basic Information</Text>
           
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Shop Name *</Text>
+            <Text style={styles.inputLabel}>Shop Name</Text>
             <TextInput
               style={styles.textInput}
               value={shopName}
@@ -326,7 +308,7 @@ export default function EditShopProfileScreen() {
           <Text style={styles.sectionTitle}>Contact Information</Text>
           
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Contact Number *</Text>
+            <Text style={styles.inputLabel}>Contact Number</Text>
             <TextInput
               style={styles.textInput}
               value={contactNumber}
@@ -338,7 +320,7 @@ export default function EditShopProfileScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Location *</Text>
+            <Text style={styles.inputLabel}>Location</Text>
             <TextInput
               style={styles.textInput}
               value={shopLocation}
@@ -377,7 +359,7 @@ export default function EditShopProfileScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Available Days *</Text>
+            <Text style={styles.inputLabel}>Available Days</Text>
             <View style={styles.daysContainer}>
               {availableDays.map((day) => (
                 <TouchableOpacity
@@ -611,7 +593,7 @@ const styles = StyleSheet.create({
     color: '#0E0F0F',
   },
   selectedOptionText: {
-    color: '#4ECDC4',
+    color: '#0E0F0F',
     fontWeight: '500',
   },
   timeRow: {
@@ -636,8 +618,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   selectedDayButton: {
-    backgroundColor: '#4ECDC4',
-    borderColor: '#4ECDC4',
+    backgroundColor: '#0E0F0F',
+    borderColor: '#0E0F0F',
   },
   dayButtonText: {
     fontSize: 12,
@@ -656,8 +638,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   toggleButtonActive: {
-    backgroundColor: '#4ECDC4',
-    borderColor: '#4ECDC4',
+    backgroundColor: '#0E0F0F',
+    borderColor: '#0E0F0F',
   },
   toggleButtonText: {
     fontSize: 14,

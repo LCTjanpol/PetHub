@@ -161,7 +161,7 @@ export default function ShopOwnerProfileScreen() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>User Profile</Text>
             <TouchableOpacity
-              onPress={() => router.push('/editandaddscreens/editshopownerprofile')}
+              onPress={() => router.push('/editandaddscreens/editprofile')}
               style={styles.editButton}
             >
               <FontAwesome5 name="user-edit" size={16} color="#0E0F0F" />
