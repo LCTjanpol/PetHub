@@ -17,8 +17,8 @@ const getApiBaseUrl = () => {
   
   // Production URL (when app is built for production)
   if (__DEV__ === false) {
-    // Replace with your actual Vercel deployment URL
-    return 'https://your-vercel-app.vercel.app/api';
+    // Vercel deployment URL for PetHub backend
+    return 'https://pethub-backend.vercel.app/api';
   }
   
   // Development URLs based on platform
