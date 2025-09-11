@@ -204,7 +204,7 @@ export default function EditShopOwnerProfileScreen() {
       style={styles.container} 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <StatusBar barStyle="light-content" backgroundColor="#4ECDC4" />
+      <StatusBar barStyle="light-content" backgroundColor="#2C2C2C" />
       
       {/* Header */}
       <View style={styles.header}>
@@ -212,15 +212,7 @@ export default function EditShopOwnerProfileScreen() {
           <FontAwesome5 name="arrow-left" size={20} color="#FFFFFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Edit Profile</Text>
-        <TouchableOpacity 
-          onPress={handleSave} 
-          style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
-          disabled={isSaving}
-        >
-          <Text style={styles.saveButtonText}>
-            {isSaving ? 'Saving...' : 'Save'}
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -321,6 +313,19 @@ export default function EditShopOwnerProfileScreen() {
             </View>
           </View>
         </View>
+
+        {/* Save Button */}
+        <View style={styles.saveButtonContainer}>
+          <TouchableOpacity 
+            onPress={handleSave} 
+            style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+            disabled={isSaving}
+          >
+            <Text style={styles.saveButtonText}>
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -348,28 +353,52 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 50,
     paddingBottom: 20,
-    backgroundColor: '#4ECDC4',
+    backgroundColor: '#2C2C2C',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   backButton: {
-    padding: 8,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: 'bold',
     color: '#FFFFFF',
+    textAlign: 'center',
+    flex: 1,
+  },
+  headerSpacer: {
+    width: 40,
+  },
+  saveButtonContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
   },
   saveButton: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    backgroundColor: '#2C2C2C',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   saveButtonDisabled: {
     opacity: 0.6,
   },
   saveButtonText: {
-    color: '#4ECDC4',
-    fontSize: 14,
+    color: '#FFFFFF',
+    fontSize: 16,
     fontWeight: '600',
   },
   content: {
@@ -388,10 +417,11 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
     color: '#0E0F0F',
-    marginBottom: 16,
+    marginBottom: 20,
+    textAlign: 'center',
   },
   imageSection: {
     backgroundColor: '#FFFFFF',
@@ -427,34 +457,46 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: 24,
   },
   inputLabel: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 18,
+    fontWeight: '600',
     color: '#0E0F0F',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   textInput: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
     borderWidth: 1,
     borderColor: '#E0E0E0',
-    borderRadius: 8,
-    padding: 12,
     fontSize: 16,
     color: '#0E0F0F',
-    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   dateInput: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
     borderWidth: 1,
     borderColor: '#E0E0E0',
-    borderRadius: 8,
-    padding: 12,
-    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   dateText: {
+    flex: 1,
     fontSize: 16,
     color: '#0E0F0F',
   },
@@ -463,27 +505,38 @@ const styles = StyleSheet.create({
   },
   genderContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     gap: 12,
   },
   genderButton: {
     flex: 1,
-    padding: 12,
-    borderRadius: 8,
+    flexDirection: 'column',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    paddingHorizontal: 16,
+    paddingVertical: 20,
     borderWidth: 1,
     borderColor: '#E0E0E0',
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   selectedGenderButton: {
-    backgroundColor: '#4ECDC4',
-    borderColor: '#4ECDC4',
+    borderColor: '#666666',
+    borderWidth: 2,
+    backgroundColor: '#F5F5F5',
   },
   genderButtonText: {
     fontSize: 14,
     color: '#666666',
     fontWeight: '500',
+    textAlign: 'center',
   },
   selectedGenderButtonText: {
-    color: '#FFFFFF',
+    color: '#666666',
+    fontWeight: '700',
   },
 });
