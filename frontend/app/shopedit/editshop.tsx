@@ -172,7 +172,7 @@ export default function EditShopScreen() {
   const handleImagePick = async (type: 'shop' | 'user') => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: [ImagePicker.MediaType.Images],
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         quality: 0.8,
         allowsEditing: true,
         aspect: type === 'shop' ? [16, 9] : [1, 1],

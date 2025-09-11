@@ -161,11 +161,11 @@ export default function ShopOwnerProfileScreen() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>User Profile</Text>
             <TouchableOpacity
-              onPress={() => router.push('/shopedit/editshop')}
+              onPress={() => router.push('/editandaddscreens/editshopownerprofile')}
               style={styles.editButton}
             >
-              <FontAwesome5 name="edit" size={16} color="#0E0F0F" />
-              <Text style={styles.editButtonText}>Edit</Text>
+              <FontAwesome5 name="user-edit" size={16} color="#0E0F0F" />
+              <Text style={styles.editButtonText}>Edit Profile</Text>
             </TouchableOpacity>
           </View>
           
@@ -190,11 +190,11 @@ export default function ShopOwnerProfileScreen() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Shop Profile</Text>
             <TouchableOpacity
-              onPress={() => router.push('/shopedit/editshop')}
+              onPress={() => router.push('/editandaddscreens/editshopprofile')}
               style={styles.editButton}
             >
-              <FontAwesome5 name="edit" size={16} color="#0E0F0F" />
-              <Text style={styles.editButtonText}>Edit</Text>
+              <FontAwesome5 name="store" size={16} color="#0E0F0F" />
+              <Text style={styles.editButtonText}>Edit Shop</Text>
             </TouchableOpacity>
           </View>
           
