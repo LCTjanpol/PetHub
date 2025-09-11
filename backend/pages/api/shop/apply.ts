@@ -4,7 +4,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import formidable from 'formidable';
 import fs from 'fs';
-import { promises as fsPromises } from 'fs';
 import path from 'path';
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
