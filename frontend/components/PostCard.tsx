@@ -96,6 +96,7 @@ export default function PostCard({
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
 
   const formatDate = (dateString: string) => {
     try {
@@ -165,6 +166,16 @@ export default function PostCard({
     if (onToggleComments) {
       onToggleComments(post.id);
     }
+  };
+
+  const toggleReplies = (commentId: string) => {
+    const newExpandedReplies = new Set(expandedReplies);
+    if (expandedReplies.has(commentId)) {
+      newExpandedReplies.delete(commentId);
+    } else {
+      newExpandedReplies.add(commentId);
+    }
+    setExpandedReplies(newExpandedReplies);
   };
 
   const canDeletePost = showMenuButton && currentUserId === post.userId;
@@ -248,52 +259,80 @@ export default function PostCard({
         </View>
       )}
 
-      {/* Comments Preview */}
+      {/* Enhanced Comments Section */}
       {showInteractions && post.comments && post.comments.length > 0 && (
         <View style={styles.commentsSection}>
           {post.comments.slice(0, post.showAllComments ? undefined : 2).map((comment) => (
-            <View key={comment.id} style={styles.commentItem}>
-              <Image
-                source={
-                  comment.userProfilePicture
-                    ? { uri: formatImageUrl(comment.userProfilePicture) || '' }
-                    : require('../assets/images/pet.png')
-                }
-                style={styles.commentAvatar}
-              />
-              <View style={styles.commentContent}>
-                <Text style={styles.commentUserName}>{comment.userName}</Text>
-                <Text style={styles.commentText}>{comment.content}</Text>
-                <Text style={styles.commentTime}>{formatDate(comment.createdAt)}</Text>
-                
-                {/* Display replies if they exist */}
-                {comment.replies && comment.replies.length > 0 && (
-                  <View style={styles.repliesContainer}>
-                    {comment.replies.map((reply) => (
-                      <View key={reply.id} style={styles.replyItem}>
-                        <Image
-                          source={
-                            reply.userProfilePicture
-                              ? { uri: formatImageUrl(reply.userProfilePicture) || '' }
-                              : require('../assets/images/pet.png')
-                          }
-                          style={styles.replyAvatar}
-                        />
-                        <View style={styles.replyContent}>
+            <View key={comment.id} style={styles.commentCard}>
+              <View style={styles.commentHeader}>
+                <Image
+                  source={
+                    comment.userProfilePicture
+                      ? { uri: formatImageUrl(comment.userProfilePicture) || '' }
+                      : require('../assets/images/pet.png')
+                  }
+                  style={styles.commentAvatar}
+                />
+                <View style={styles.commentMainContent}>
+                  <View style={styles.commentUserInfo}>
+                    <Text style={styles.commentUserName}>{comment.userName}</Text>
+                    <Text style={styles.commentTime}>{formatDate(comment.createdAt)}</Text>
+                  </View>
+                  <Text style={styles.commentText}>{comment.content}</Text>
+                  
+                  {/* Reply toggle button */}
+                  {comment.replies && comment.replies.length > 0 && (
+                    <TouchableOpacity 
+                      onPress={() => toggleReplies(comment.id)}
+                      style={styles.repliesToggleButton}
+                    >
+                      <FontAwesome5 
+                        name={expandedReplies.has(comment.id) ? "chevron-up" : "chevron-down"} 
+                        size={12} 
+                        color="#4ECDC4" 
+                      />
+                      <Text style={styles.repliesToggleText}>
+                        {expandedReplies.has(comment.id) 
+                          ? `Hide ${comment.replies.length} ${comment.replies.length === 1 ? 'reply' : 'replies'}`
+                          : `Show ${comment.replies.length} ${comment.replies.length === 1 ? 'reply' : 'replies'}`
+                        }
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+              
+              {/* Collapsible Replies */}
+              {comment.replies && comment.replies.length > 0 && expandedReplies.has(comment.id) && (
+                <View style={styles.repliesContainer}>
+                  {comment.replies.map((reply, index) => (
+                    <View key={reply.id} style={[styles.replyItem, index === comment.replies!.length - 1 && styles.lastReplyItem]}>
+                      <View style={styles.replyConnector} />
+                      <Image
+                        source={
+                          reply.userProfilePicture
+                            ? { uri: formatImageUrl(reply.userProfilePicture) || '' }
+                            : require('../assets/images/pet.png')
+                        }
+                        style={styles.replyAvatar}
+                      />
+                      <View style={styles.replyContent}>
+                        <View style={styles.replyUserInfo}>
                           <Text style={styles.replyUserName}>{reply.userName}</Text>
-                          <Text style={styles.replyText}>{reply.content}</Text>
                           <Text style={styles.replyTime}>{formatDate(reply.createdAt)}</Text>
                         </View>
+                        <Text style={styles.replyText}>{reply.content}</Text>
                       </View>
-                    ))}
-                  </View>
-                )}
-              </View>
+                    </View>
+                  ))}
+                </View>
+              )}
             </View>
           ))}
           
           {post.comments.length > 2 && !post.showAllComments && (
-            <TouchableOpacity onPress={handleToggleComments}>
+            <TouchableOpacity onPress={handleToggleComments} style={styles.viewMoreCommentsButton}>
+              <FontAwesome5 name="comment-dots" size={14} color="#4ECDC4" />
               <Text style={styles.viewMoreComments}>
                 View all {post.comments.length} comments
               </Text>
@@ -536,84 +575,151 @@ const styles = StyleSheet.create({
   likedText: {
     color: '#FF4757',
   },
-  // Comments styles
+  // Enhanced Comments styles
   commentsSection: {
-    marginTop: 12,
-    paddingTop: 12,
+    marginTop: 16,
+    paddingTop: 16,
     borderTopWidth: 1,
     borderTopColor: '#F0F0F0',
   },
-  commentItem: {
+  commentCard: {
+    backgroundColor: '#FAFAFA',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+  },
+  commentHeader: {
     flexDirection: 'row',
-    marginBottom: 8,
+    alignItems: 'flex-start',
   },
   commentAvatar: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    marginRight: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 12,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
-  commentContent: {
+  commentMainContent: {
     flex: 1,
   },
+  commentUserInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
   commentUserName: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '600',
     color: '#0E0F0F',
-    marginBottom: 2,
+    marginRight: 8,
+  },
+  commentTime: {
+    fontSize: 11,
+    color: '#999999',
+    fontWeight: '400',
   },
   commentText: {
     fontSize: 14,
     color: '#333333',
-    lineHeight: 18,
+    lineHeight: 20,
+    marginBottom: 8,
   },
-  commentTime: {
-    fontSize: 10,
-    color: '#999999',
-    marginTop: 2,
+  repliesToggleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    alignSelf: 'flex-start',
+  },
+  repliesToggleText: {
+    fontSize: 12,
+    color: '#4ECDC4',
+    fontWeight: '500',
+    marginLeft: 6,
+  },
+  viewMoreCommentsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 20,
+    marginTop: 8,
   },
   viewMoreComments: {
     fontSize: 12,
     color: '#4ECDC4',
     fontWeight: '500',
-    marginTop: 8,
+    marginLeft: 6,
   },
-  // Replies styles
+  // Enhanced Replies styles
   repliesContainer: {
-    marginTop: 8,
-    marginLeft: 16,
-    paddingLeft: 12,
-    borderLeftWidth: 2,
-    borderLeftColor: '#E0E0E0',
+    marginTop: 12,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#E8E8E8',
   },
   replyItem: {
     flexDirection: 'row',
-    marginBottom: 6,
+    alignItems: 'flex-start',
+    marginBottom: 8,
+    paddingLeft: 16,
+    position: 'relative',
+  },
+  lastReplyItem: {
+    marginBottom: 0,
+  },
+  replyConnector: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    width: 2,
+    height: '100%',
+    backgroundColor: '#4ECDC4',
+    borderRadius: 1,
   },
   replyAvatar: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    marginRight: 6,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#FFFFFF',
   },
   replyContent: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: 8,
+  },
+  replyUserInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
   },
   replyUserName: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
     color: '#0E0F0F',
-    marginBottom: 1,
+    marginRight: 6,
+  },
+  replyTime: {
+    fontSize: 10,
+    color: '#999999',
+    fontWeight: '400',
   },
   replyText: {
     fontSize: 12,
     color: '#333333',
     lineHeight: 16,
-  },
-  replyTime: {
-    fontSize: 9,
-    color: '#999999',
-    marginTop: 1,
   },
   // Comment modal styles
   commentModalOverlay: {
