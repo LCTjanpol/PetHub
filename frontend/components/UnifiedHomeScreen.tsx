@@ -136,9 +136,16 @@ export default function UnifiedHomeScreen({ currentUserIsShopOwner, currentUserI
       if (!result.canceled && result.assets[0]) {
         setNewPostImage(result.assets[0].uri);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to pick image. Please try again.');
+      if (error.code === 'E_NO_CAMERA_PERMISSION') {
+        Alert.alert('Permission Required', 'Please grant camera roll permissions in your device settings.');
+      } else if (error.code === 'E_PICKER_CANCELLED') {
+        // User cancelled, no need to show error
+        return;
+      } else {
+        Alert.alert('Error', 'Failed to pick image. Please try again.');
+      }
     }
   };
 
@@ -292,7 +299,7 @@ export default function UnifiedHomeScreen({ currentUserIsShopOwner, currentUserI
           );
         }
 
-        Alert.alert('Success! 🎉', 'Comment added successfully!');
+        // Comment added successfully - no popup needed
         await fetchPosts(); // Refresh posts to show new comment
       } else {
         throw new Error(response.data.message || 'Failed to add comment');

@@ -34,6 +34,7 @@ const ShopApprovalNotification: React.FC<ShopApprovalNotificationProps> = ({ onS
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [shopStatus, setShopStatus] = useState<ShopStatusData | null>(null);
   const [previousShopOwnerStatus, setPreviousShopOwnerStatus] = useState<boolean | null>(null);
+  const [approvalPopupShown, setApprovalPopupShown] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Check shop status with enhanced logic
@@ -50,10 +51,11 @@ const ShopApprovalNotification: React.FC<ShopApprovalNotificationProps> = ({ onS
       setShopStatus(statusData);
       onStatusCheck(statusData);
 
-      // Check if user just became a shop owner (status changed from false to true)
-      if (statusData.isShopOwner && statusData.hasShop && previousShopOwnerStatus === false) {
+      // Check if user just became a shop owner (status changed from false to true) and popup hasn't been shown
+      if (statusData.isShopOwner && statusData.hasShop && previousShopOwnerStatus === false && !approvalPopupShown) {
         console.log('🎉 Shop approval detected! User is now a shop owner');
         setShowApprovalModal(true);
+        setApprovalPopupShown(true); // Mark that popup has been shown
       }
 
       // Update previous status for next comparison

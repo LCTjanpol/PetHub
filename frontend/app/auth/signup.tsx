@@ -36,7 +36,7 @@ export default function RegisterScreen() {
 
   const handleImagePick = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-              mediaTypes: ['images'],
+      mediaTypes: [ImagePicker.MediaType.Images],
       quality: 1,
       allowsEditing: true, // Enable cropping
       aspect: [1, 1], // Force square crop for profile

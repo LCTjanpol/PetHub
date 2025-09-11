@@ -193,7 +193,6 @@ export default function PostCard({
       );
 
       if (response.data.success) {
-        Alert.alert('Success! 🎉', 'Reply added successfully!');
         setReplyText('');
         setReplyingToComment(null);
         // Refresh the post data by calling onAddComment to trigger a refresh
@@ -389,33 +388,31 @@ export default function PostCard({
               {/* Reply Input Field */}
               {replyingToComment === comment.id && (
                 <View style={styles.replyInputContainer}>
-                  <View style={styles.replyInputWrapper}>
-                    <TextInput
-                      style={styles.replyInput}
-                      placeholder="Write a reply..."
-                      value={replyText}
-                      onChangeText={setReplyText}
-                      multiline
-                      maxLength={500}
-                      placeholderTextColor="#999999"
-                    />
-                    <View style={styles.replyInputActions}>
-                      <TouchableOpacity 
-                        onPress={handleCancelReply}
-                        style={styles.replyCancelButton}
-                      >
-                        <Text style={styles.replyCancelText}>Cancel</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity 
-                        onPress={handleSubmitReply}
-                        style={[styles.replySubmitButton, !replyText.trim() && styles.replySubmitButtonDisabled]}
-                        disabled={!replyText.trim() || isSubmittingReply}
-                      >
-                        <Text style={[styles.replySubmitText, !replyText.trim() && styles.replySubmitTextDisabled]}>
-                          {isSubmittingReply ? 'Posting...' : 'Reply'}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
+                  <TextInput
+                    style={styles.replyInput}
+                    placeholder="Write a reply..."
+                    value={replyText}
+                    onChangeText={setReplyText}
+                    multiline
+                    maxLength={200}
+                    placeholderTextColor="#999999"
+                  />
+                  <View style={styles.replyInputActions}>
+                    <TouchableOpacity 
+                      onPress={handleCancelReply}
+                      style={styles.replyCancelButton}
+                    >
+                      <Text style={styles.replyCancelText}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      onPress={handleSubmitReply}
+                      style={[styles.replySubmitButton, !replyText.trim() && styles.replySubmitButtonDisabled]}
+                      disabled={!replyText.trim() || isSubmittingReply}
+                    >
+                      <Text style={[styles.replySubmitText, !replyText.trim() && styles.replySubmitTextDisabled]}>
+                        {isSubmittingReply ? '...' : 'Reply'}
+                      </Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
               )}
@@ -901,26 +898,25 @@ const styles = StyleSheet.create({
   },
   // Reply input styles
   replyInputContainer: {
-    marginTop: 12,
+    marginTop: 8,
     marginLeft: 16,
-    paddingLeft: 16,
-    borderLeftWidth: 2,
-    borderLeftColor: '#4ECDC4',
-  },
-  replyInputWrapper: {
-    backgroundColor: '#F8F9FA',
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
+    paddingLeft: 12,
+    borderLeftWidth: 1,
+    borderLeftColor: '#E0E0E0',
   },
   replyInput: {
     fontSize: 14,
     color: '#0E0F0F',
-    minHeight: 40,
-    maxHeight: 100,
+    minHeight: 32,
+    maxHeight: 80,
     textAlignVertical: 'top',
     marginBottom: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
   replyInputActions: {
     flexDirection: 'row',
