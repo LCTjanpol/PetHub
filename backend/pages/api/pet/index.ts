@@ -1,4 +1,5 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type { NextApiResponse } from 'next';
+import type { AuthenticatedRequest } from '../../../types/next';
 import prisma from '../../../lib/prisma';
 import { authMiddleware } from '../../../lib/middleware';
 import formidable from 'formidable';
@@ -11,7 +12,7 @@ export const config = {
   },
 };
 
-const handler = async (req: NextApiRequest, res: NextApiResponse) => {
+const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
   const userId = req.user?.userId;
 
   if (!userId) {
