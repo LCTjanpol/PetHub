@@ -198,8 +198,8 @@ const EditPetProfileScreen = () => {
       formData.append('breed', pet.breed);
       formData.append('healthCondition', pet.healthCondition);
       
-      // Handle image updates
-      if (profileImage && profileImage !== pet.petPicture) {
+      // Handle image updates - always send the current profileImage state
+      if (profileImage) {
         if (profileImage.startsWith('file://') || profileImage.startsWith('content://')) {
           // New local image from ImagePicker
           const imageFile = {
@@ -213,8 +213,8 @@ const EditPetProfileScreen = () => {
           formData.append('petPicture', profileImage);
         }
       } else {
-        // No image change - keep existing
-        formData.append('petPicture', pet.petPicture || '');
+        // No image - send empty string to clear image
+        formData.append('petPicture', '');
       }
 
 
@@ -244,8 +244,10 @@ const EditPetProfileScreen = () => {
         // Update profile image state - use the new server path
         if (response.data.petPicture) {
           setProfileImage(response.data.petPicture);
+          setPet(prevPet => ({ ...prevPet, petPicture: response.data.petPicture }));
         } else {
           setProfileImage(null);
+          setPet(prevPet => ({ ...prevPet, petPicture: '' }));
         }
         
         // Show success message and navigate back

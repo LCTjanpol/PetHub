@@ -367,15 +367,13 @@ export default function UnifiedHomeScreen({ currentUserIsShopOwner, currentUserI
               }
             </Text>
           </View>
-          {currentUserIsShopOwner && (
-            <TouchableOpacity
-              style={styles.addPostButton}
-              onPress={() => setShowAddPostModal(true)}
-            >
-              <FontAwesome5 name="plus" size={16} color="#FFFFFF" />
-              <Text style={styles.addPostButtonText}>Create Post</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            style={styles.addPostButton}
+            onPress={() => setShowAddPostModal(true)}
+          >
+            <FontAwesome5 name="plus" size={16} color="#FFFFFF" />
+            <Text style={styles.addPostButtonText}>Create Post</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Posts */}

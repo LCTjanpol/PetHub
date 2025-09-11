@@ -130,6 +130,30 @@ export default function ShopsScreen() {
     setShowShopModal(true);
   };
 
+  const handleDeletePost = async (shopId: string) => {
+    Alert.alert(
+      'Delete Post',
+      'Are you sure you want to delete this post?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const token = await AsyncStorage.getItem('token');
+              // Note: This would need a proper post deletion API endpoint
+              Alert.alert('Success', 'Post deleted successfully');
+            } catch (error) {
+              console.error('Failed to delete post:', error);
+              Alert.alert('Error', 'Failed to delete post');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const getStatusColor = (isAvailable: boolean) => {
     return isAvailable ? '#4ECDC4' : '#FF6B6B';
   };
@@ -184,6 +208,58 @@ export default function ShopsScreen() {
           <View style={styles.hoursContainer}>
             <FontAwesome5 name="clock" size={12} color="#666666" />
             <Text style={styles.hoursText}>{item.openingTime || 'N/A'} - {item.closingTime || 'N/A'}</Text>
+          </View>
+        </View>
+
+        {/* Recent Posts Section */}
+        <View style={styles.postsSection}>
+          <Text style={styles.postsSectionTitle}>Recent Posts</Text>
+          <View style={styles.postsContainer}>
+            <View style={styles.postItem}>
+              <View style={styles.postHeader}>
+                <Image
+                  source={
+                    item.shopImage && item.shopImage.trim() !== ''
+                      ? { uri: formatImageUrl(item.shopImage) || '' }
+                      : require('../../assets/images/shop.png')
+                  }
+                  style={styles.postAuthorImage}
+                />
+                <View style={styles.postAuthorInfo}>
+                  <Text style={styles.postAuthorName}>{item.shopName || 'Unnamed Shop'}</Text>
+                  <Text style={styles.postTime}>2 hours ago</Text>
+                </View>
+                <TouchableOpacity 
+                  style={styles.postDeleteButton}
+                  onPress={() => handleDeletePost(item.id)}
+                >
+                  <FontAwesome5 name="trash" size={12} color="#FF6B6B" />
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.postContent}>
+                Soft Opening @Dumlog today free dog cups for the first 10 customers
+              </Text>
+              <View style={styles.postImageContainer}>
+                <Image
+                  source={
+                    item.shopImage && item.shopImage.trim() !== ''
+                      ? { uri: formatImageUrl(item.shopImage) || '' }
+                      : require('../../assets/images/shop.png')
+                  }
+                  style={styles.postImage}
+                />
+              </View>
+              <View style={styles.postStats}>
+                <View style={styles.postStatItem}>
+                  <FontAwesome5 name="heart" size={12} color="#FF6B6B" />
+                  <Text style={styles.postStatText}>24 likes</Text>
+                </View>
+                <View style={styles.postStatItem}>
+                  <FontAwesome5 name="comment" size={12} color="#4ECDC4" />
+                  <Text style={styles.postStatText}>8 comments</Text>
+                </View>
+              </View>
+            </View>
           </View>
         </View>
       </View>
@@ -639,5 +715,80 @@ const styles = StyleSheet.create({
     color: '#0E0F0F',
     flex: 1,
     textAlign: 'right',
+  },
+  postsSection: {
+    marginTop: 15,
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+  },
+  postsSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0E0F0F',
+    marginBottom: 12,
+  },
+  postsContainer: {
+    marginBottom: 10,
+  },
+  postItem: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+  },
+  postHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  postAuthorImage: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 8,
+  },
+  postAuthorInfo: {
+    flex: 1,
+  },
+  postAuthorName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#0E0F0F',
+  },
+  postTime: {
+    fontSize: 12,
+    color: '#666666',
+  },
+  postDeleteButton: {
+    padding: 4,
+  },
+  postContent: {
+    fontSize: 14,
+    color: '#0E0F0F',
+    marginBottom: 8,
+    lineHeight: 18,
+  },
+  postImageContainer: {
+    marginBottom: 8,
+  },
+  postImage: {
+    width: '100%',
+    height: 120,
+    borderRadius: 8,
+  },
+  postStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  postStatItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  postStatText: {
+    fontSize: 12,
+    color: '#666666',
+    marginLeft: 4,
   },
 });

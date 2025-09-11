@@ -84,34 +84,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const shopLocation = fields.shopLocation as string;
       const isAvailable = fields.isAvailable === 'true';
 
-      // Validate required fields
-      if (!shopName || !bio || !contactNumber || !shopLocation) {
-        return res.status(400).json({ message: 'All required fields must be provided' });
+      // Validate required fields - make them optional for editing
+      if (!shopName) {
+        return res.status(400).json({ message: 'Shop name is required' });
       }
 
       // Handle image upload
       let shopImagePath = undefined;
       if (files.shopImage) {
         const file = files.shopImage as formidable.File;
-        const fileName = `shop_${Date.now()}_${file.originalFilename}`;
-        const newPath = path.join(process.cwd(), 'public/uploads', fileName);
-        
-        // Move file to uploads directory
-        fs.renameSync(file.filepath, newPath);
-        shopImagePath = `/uploads/${fileName}`;
+        if (file.filepath) {
+          const fileName = `shop_${Date.now()}_${file.originalFilename || 'image.jpg'}`;
+          const newPath = path.join(process.cwd(), 'public/uploads', fileName);
+          
+          // Move file to uploads directory
+          fs.renameSync(file.filepath, newPath);
+          shopImagePath = `/uploads/${fileName}`;
+        }
       }
 
-      // Update shop
+      // Update shop - only update fields that are provided
+      const updateData: any = {
+        shopName,
+        isAvailable,
+        ...(shopImagePath && { shopImage: shopImagePath }),
+      };
+
+      // Only update fields that have values
+      if (bio && bio.trim()) updateData.bio = bio;
+      if (contactNumber && contactNumber.trim()) updateData.contactNumber = contactNumber;
+      if (shopLocation && shopLocation.trim()) updateData.shopLocation = shopLocation;
+
       const updatedShop = await prisma.shop.update({
         where: { userId },
-        data: {
-          shopName,
-          bio,
-          contactNumber,
-          shopLocation,
-          isAvailable,
-          ...(shopImagePath && { shopImage: shopImagePath }),
-        },
+        data: updateData,
       });
 
       res.status(200).json({

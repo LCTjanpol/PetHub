@@ -208,8 +208,8 @@ export default function EditShopScreen() {
 
   const handleSaveChanges = async () => {
     if (editMode === 'shop') {
-      if (!shopName.trim() || !shopBio.trim() || !shopContact.trim() || !shopLocation.trim() || !shopType.trim()) {
-        Alert.alert('Error', 'Please fill in all required fields.');
+      if (!shopName.trim()) {
+        Alert.alert('Error', 'Shop name is required.');
         return;
       }
     } else {
@@ -233,10 +233,10 @@ export default function EditShopScreen() {
         // Update shop profile
         const formData = new FormData();
         formData.append('shopName', shopName.trim());
-        formData.append('bio', shopBio.trim());
-        formData.append('contactNumber', shopContact.trim());
-        formData.append('shopLocation', shopLocation.trim());
-        formData.append('shopType', shopType.trim());
+        formData.append('bio', shopBio.trim() || '');
+        formData.append('contactNumber', shopContact.trim() || '');
+        formData.append('shopLocation', shopLocation.trim() || '');
+        formData.append('shopType', shopType.trim() || '');
         formData.append('isAvailable', shopIsAvailable.toString());
         
         if (shopImage) {
