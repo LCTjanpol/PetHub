@@ -43,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         availableDays: shop.availableDays,
         isAvailable: shop.isAvailable,
         shopType: shop.shopType,
-        ownerName: shop.user.fullName,
+        ownerName: shop.user?.fullName || 'Unknown',
         promotionalPosts: shop.promotionalPosts,
       });
     } else {
