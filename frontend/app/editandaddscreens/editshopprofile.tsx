@@ -119,7 +119,7 @@ export default function EditShopProfileScreen() {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ImagePicker.MediaType.Images,
         allowsEditing: true,
         aspect: [16, 9],
         quality: 0.8,

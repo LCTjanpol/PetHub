@@ -22,20 +22,11 @@ export default function ShopTabsLayout() {
       }}
     >
       <Tabs.Screen
-        name="shop"
-        options={{
-          title: 'Shop',
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="store" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="user" size={size} color={color} />
+            <FontAwesome5 name="store" size={size} color={color} />
           ),
         }}
       />
