@@ -214,7 +214,7 @@ export default function ShopsScreen() {
           </View>
           
           {selectedShop && (
-            <ScrollView style={styles.modalScrollView}>
+            <View style={styles.modalContentContainer}>
               {selectedShop.shopImage && selectedShop.shopImage.trim() !== '' && (
                 <Image
                   source={{ uri: formatImageUrl(selectedShop.shopImage) || '' }}
@@ -305,7 +305,7 @@ export default function ShopsScreen() {
                   </Text>
                 </View>
               </View>
-            </ScrollView>
+            </View>
           )}
         </View>
       </View>
@@ -568,7 +568,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  modalScrollView: {
+  modalContentContainer: {
     maxHeight: 400,
   },
   modalShopImage: {

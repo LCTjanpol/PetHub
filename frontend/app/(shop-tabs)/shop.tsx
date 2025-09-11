@@ -12,7 +12,6 @@ import {
   StyleSheet,
   StatusBar,
   RefreshControl,
-  FlatList,
   Modal,
 } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
@@ -319,12 +318,13 @@ export default function ShopScreen() {
               <Text style={styles.noPostsText}>No posts yet. Be the first to share!</Text>
             </View>
           ) : (
-            <FlatList
-              data={posts}
-              renderItem={renderPostItem}
-              keyExtractor={(item) => item.id}
-              contentContainerStyle={styles.postsList}
-            />
+            <View style={styles.postsList}>
+              {posts.map((item) => (
+                <View key={item.id}>
+                  {renderPostItem({ item })}
+                </View>
+              ))}
+            </View>
           )}
         </View>
       </ScrollView>
