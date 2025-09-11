@@ -75,9 +75,9 @@ export const ENDPOINTS = {
   POST: {
     LIST: '/posts',
     CREATE: '/post',
-    DETAIL: (id: string) => `/posts/${id}`,
-    UPDATE: (id: string) => `/posts/${id}`,
-    DELETE: (id: string) => `/posts/${id}`,
+    DETAIL: (id: string) => `/post/${id}`,
+    UPDATE: (id: string) => `/post/${id}`,
+    DELETE: (id: string) => `/post/${id}`,
     LIKE: (id: string) => `/posts/${id}/like`,
     UNLIKE: (id: string) => `/posts/${id}/unlike`,
     COMMENT: (id: string) => `/posts/${id}/comments`,

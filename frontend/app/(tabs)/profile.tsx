@@ -26,14 +26,14 @@ interface User {
 
 // Interface for post data structure
 interface Post {
-  id: string;
+  id: number;
   content: string;
   image?: string;
   createdAt: string;
   likesCount?: number;
   likes?: number;
   comments?: Comment[];
-  userId: string;
+  userId: number;
 }
 
 // Interface for comment data structure
@@ -201,7 +201,7 @@ const Profile = () => {
                 return;
               }
 
-              await apiClient.delete(ENDPOINTS.POST.DELETE(post.id), {
+              await apiClient.delete(ENDPOINTS.POST.DELETE(post.id.toString()), {
                 headers: { Authorization: `Bearer ${token}` },
               });
               
