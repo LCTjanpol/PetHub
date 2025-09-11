@@ -419,14 +419,13 @@ export default function UnifiedHomeScreen({ currentUserIsShopOwner, currentUserI
         )}
       </ScrollView>
 
-      {/* Create Post Modal (Shop Owners Only) */}
-      {currentUserIsShopOwner && (
-        <Modal
-          visible={showAddPostModal}
-          transparent={true}
-          animationType="slide"
-          onRequestClose={() => setShowAddPostModal(false)}
-        >
+      {/* Create Post Modal (All Users) */}
+      <Modal
+        visible={showAddPostModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowAddPostModal(false)}
+      >
           <KeyboardAvoidingView 
             style={styles.modalOverlay}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -444,7 +443,7 @@ export default function UnifiedHomeScreen({ currentUserIsShopOwner, currentUserI
               
               <TextInput
                 style={styles.postInput}
-                placeholder="What's on your mind? Share updates about your shop, new arrivals, or pet care tips..."
+                placeholder="What's on your mind? Share updates about your pets, ask questions, or connect with other pet owners..."
                 value={newPostContent}
                 onChangeText={setNewPostContent}
                 multiline
@@ -498,7 +497,6 @@ export default function UnifiedHomeScreen({ currentUserIsShopOwner, currentUserI
             </View>
           </KeyboardAvoidingView>
         </Modal>
-      )}
     </View>
   );
 }
