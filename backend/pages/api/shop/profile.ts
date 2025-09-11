@@ -104,7 +104,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Update shop - only update fields that are provided
-      const updateData: Record<string, any> = {
+      const updateData: Record<string, string | boolean> = {
         shopName,
         isAvailable,
         ...(shopImagePath && { shopImage: shopImagePath }),
