@@ -121,7 +121,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({ 
-      where: { email: email as string } 
+      where: { email: email } 
     });
     
     if (existingUser) {
@@ -133,13 +133,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     // Hash password and create user (initially without profilePicture)
-    const hashedPassword = await hashPassword(password as string);
+    const hashedPassword = await hashPassword(password);
     const user = await prisma.user.create({
       data: {
-        fullName: fullName as string,
-        gender: gender as string,
+        fullName: fullName,
+        gender: gender,
         birthdate: birthDate,
-        email: email as string,
+        email: email,
         password: hashedPassword,
         profilePicture: null, // Set later if image is uploaded
       },

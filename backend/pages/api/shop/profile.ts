@@ -78,10 +78,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
       });
 
-      const shopName = fields.shopName as string;
-      const bio = fields.bio as string;
-      const contactNumber = fields.contactNumber as string;
-      const shopLocation = fields.shopLocation as string;
+      const shopName = Array.isArray(fields.shopName) ? fields.shopName[0] : (typeof fields.shopName === 'string' ? fields.shopName : '');
+      const bio = Array.isArray(fields.bio) ? fields.bio[0] : (typeof fields.bio === 'string' ? fields.bio : '');
+      const contactNumber = Array.isArray(fields.contactNumber) ? fields.contactNumber[0] : (typeof fields.contactNumber === 'string' ? fields.contactNumber : '');
+      const shopLocation = Array.isArray(fields.shopLocation) ? fields.shopLocation[0] : (typeof fields.shopLocation === 'string' ? fields.shopLocation : '');
       const isAvailable = fields.isAvailable === 'true';
 
       // Validate required fields - make them optional for editing
