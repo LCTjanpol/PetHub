@@ -55,7 +55,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const openingTime = Array.isArray(fields.openingTime) ? fields.openingTime[0] : (typeof fields.openingTime === 'string' ? fields.openingTime : '');
     const closingTime = Array.isArray(fields.closingTime) ? fields.closingTime[0] : (typeof fields.closingTime === 'string' ? fields.closingTime : '');
     const availableDays = Array.isArray(fields.availableDays) ? fields.availableDays[0] : (typeof fields.availableDays === 'string' ? fields.availableDays : '');
-    const isAvailable = Array.isArray(fields.isAvailable) ? fields.isAvailable[0] === 'true' : fields.isAvailable === 'true';
+    const isAvailableValue = Array.isArray(fields.isAvailable) ? fields.isAvailable[0] : (typeof fields.isAvailable === 'string' ? fields.isAvailable : 'false');
+    const isAvailable = isAvailableValue === 'true';
     
     // Extract coordinates for map pinning
     const latitude = Array.isArray(fields.latitude) ? parseFloat(fields.latitude[0]) : parseFloat(typeof fields.latitude === 'string' ? fields.latitude : '0');
