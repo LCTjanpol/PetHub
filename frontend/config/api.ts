@@ -6,16 +6,22 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { Platform } from 'react-native';
 
-// API base URL from environment variable or default based on platform
+// API base URL from environment variable or default based on platform and environment
 // To override this for your environment, create a .env file with:
 // EXPO_PUBLIC_API_URL=http://your-ip-address:3000/api
 const getApiBaseUrl = () => {
-  // Check if environment variable is set
+  // Check if environment variable is set (for production)
   if (process.env.EXPO_PUBLIC_API_URL) {
     return process.env.EXPO_PUBLIC_API_URL;
   }
   
-  // Default URLs based on platform
+  // Production URL (when app is built for production)
+  if (__DEV__ === false) {
+    // Replace with your actual Vercel deployment URL
+    return 'https://your-vercel-app.vercel.app/api';
+  }
+  
+  // Development URLs based on platform
   if (Platform.OS === 'ios') {
     // iOS simulator uses localhost
     return 'http://localhost:3000/api';

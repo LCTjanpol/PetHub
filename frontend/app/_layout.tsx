@@ -34,7 +34,7 @@ export default function RootLayout() {
           if (user.isAdmin) {
             router.replace('/admin/dashboard');
           } else if (user.isShopOwner) {
-            router.replace('/(shop-tabs)/shop');
+            router.replace('/(shop-tabs)/profile');
           } else {
             router.replace('/(tabs)/home');
           }
