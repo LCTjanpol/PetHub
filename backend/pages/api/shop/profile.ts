@@ -93,8 +93,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Handle image upload
       let shopImagePath = undefined;
       if (files.shopImage) {
-        const file = files.shopImage as formidable.File;
-        if (file.filepath) {
+        const file = Array.isArray(files.shopImage) ? files.shopImage[0] : files.shopImage;
+        if (file && file.filepath) {
           const fileName = `shop_${Date.now()}_${file.originalFilename || 'image.jpg'}`;
           const newPath = path.join(process.cwd(), 'public/uploads', fileName);
           
