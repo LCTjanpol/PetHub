@@ -19,6 +19,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiClient, ENDPOINTS } from '../../config/api';
 import { formatImageUrl } from '../../utils/imageUtils';
+import { formatRelativeTime } from '../../utils/timeUtils';
 
 interface Shop {
   id: string;
@@ -227,7 +228,7 @@ export default function ShopsScreen() {
                 />
                 <View style={styles.postAuthorInfo}>
                   <Text style={styles.postAuthorName}>{item.shopName || 'Unnamed Shop'}</Text>
-                  <Text style={styles.postTime}>2 hours ago</Text>
+                  <Text style={styles.postTime}>{formatRelativeTime(new Date().toISOString())}</Text>
                 </View>
                 <TouchableOpacity 
                   style={styles.postDeleteButton}

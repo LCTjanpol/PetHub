@@ -164,3 +164,61 @@ export const getTimeFormat = (time: string): '12hour' | '24hour' | 'unknown' => 
   
   return 'unknown';
 };
+
+/**
+ * Formats a date/time string to show relative time (e.g., "2 hours ago", "3 days ago")
+ * @param dateString - ISO date string or timestamp
+ * @returns Formatted relative time string
+ */
+export const formatRelativeTime = (dateString: string): string => {
+  if (!dateString) return 'Unknown time';
+  
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    // Less than 1 minute
+    if (diffInSeconds < 60) {
+      return 'Just now';
+    }
+    
+    // Less than 1 hour
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes} minute${diffInMinutes === 1 ? '' : 's'} ago`;
+    }
+    
+    // Less than 1 day
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) {
+      return `${diffInHours} hour${diffInHours === 1 ? '' : 's'} ago`;
+    }
+    
+    // Less than 1 week
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) {
+      return `${diffInDays} day${diffInDays === 1 ? '' : 's'} ago`;
+    }
+    
+    // Less than 1 month
+    const diffInWeeks = Math.floor(diffInDays / 7);
+    if (diffInWeeks < 4) {
+      return `${diffInWeeks} week${diffInWeeks === 1 ? '' : 's'} ago`;
+    }
+    
+    // Less than 1 year
+    const diffInMonths = Math.floor(diffInDays / 30);
+    if (diffInMonths < 12) {
+      return `${diffInMonths} month${diffInMonths === 1 ? '' : 's'} ago`;
+    }
+    
+    // More than 1 year
+    const diffInYears = Math.floor(diffInDays / 365);
+    return `${diffInYears} year${diffInYears === 1 ? '' : 's'} ago`;
+    
+  } catch (error) {
+    console.error('[timeUtils] Error formatting relative time:', error);
+    return 'Unknown time';
+  }
+};

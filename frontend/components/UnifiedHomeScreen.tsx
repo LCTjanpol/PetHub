@@ -149,7 +149,7 @@ export default function UnifiedHomeScreen({ currentUserIsShopOwner, currentUserI
     }
   };
 
-  // Handle post creation (shop owners only)
+  // Handle post creation (all users)
   const handleCreatePost = async () => {
     if (!newPostContent.trim()) {
       Alert.alert('Error', 'Please write something to post.');
@@ -166,6 +166,10 @@ export default function UnifiedHomeScreen({ currentUserIsShopOwner, currentUserI
         return;
       }
 
+      console.log('[Post Creation] Starting post creation...');
+      console.log('[Post Creation] Content:', newPostContent.trim());
+      console.log('[Post Creation] Has image:', !!newPostImage);
+
       const formData = new FormData();
       formData.append('content', newPostContent.trim());
       
@@ -177,12 +181,16 @@ export default function UnifiedHomeScreen({ currentUserIsShopOwner, currentUserI
         } as any);
       }
 
+      console.log('[Post Creation] Sending request to:', ENDPOINTS.POST.CREATE);
+
       const response = await apiClient.post(ENDPOINTS.POST.CREATE, formData, {
         headers: { 
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
       });
+
+      console.log('[Post Creation] Response received:', response.data);
 
       if (response.data.success) {
         setShowAddPostModal(false);
@@ -194,6 +202,9 @@ export default function UnifiedHomeScreen({ currentUserIsShopOwner, currentUserI
         throw new Error(response.data.message || 'Failed to create post');
       }
     } catch (error: any) {
+      console.error('[Post Creation] Error:', error);
+      console.error('[Post Creation] Error response:', error.response?.data);
+      
       let errorMessage = 'Failed to create post. Please try again.';
       
       if (error.response?.status === 401) {

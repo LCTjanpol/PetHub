@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { formatImageUrl } from '../utils/imageUtils';
+import { formatRelativeTime } from '../utils/timeUtils';
 import { apiClient, ENDPOINTS } from '../config/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -102,18 +103,7 @@ export default function PostCard({
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
 
   const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      const now = new Date();
-      const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-      
-      if (diffInHours < 1) return 'Just now';
-      if (diffInHours < 24) return `${diffInHours}h ago`;
-      if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`;
-      return date.toLocaleDateString();
-    } catch {
-      return 'Unknown time';
-    }
+    return formatRelativeTime(dateString);
   };
 
   const handleDeletePost = () => {
