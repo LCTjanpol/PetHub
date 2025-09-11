@@ -143,18 +143,23 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error) => {
-    console.error('[API Client] Response error:', {
-      status: error.response?.status,
-      message: error.message,
-      url: error.config?.url,
-      method: error.config?.method,
-    });
-
-    // Handle 401 errors globally
+    // Handle 401 errors selectively - don't auto-logout on posting errors
     if (error.response?.status === 401) {
-      console.log('[API Client] Unauthorized, clearing token and redirecting to login');
-      await AsyncStorage.removeItem('token');
-      router.replace('/auth/login');
+      const url = error.config?.url || '';
+      const method = error.config?.method?.toLowerCase() || '';
+      
+      // Don't auto-logout on POST requests (like creating posts, comments)
+      // Let the component handle these errors with user-friendly messages
+      if (method === 'post' && (url.includes('/post') || url.includes('/comment'))) {
+        // Let the component handle this error
+        return Promise.reject(error);
+      }
+      
+      // Only auto-logout on GET requests or profile-related requests
+      if (method === 'get' || url.includes('/profile') || url.includes('/auth/')) {
+        await AsyncStorage.removeItem('token');
+        router.replace('/auth/login');
+      }
     }
 
     return Promise.reject(error);

@@ -1,9 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import formidable from 'formidable';
 import prisma from '../../../lib/prisma';
-import { authMiddleware } from '../../../lib/middleware';
 import fs from 'fs';
 import path from 'path';
+import jwt from 'jsonwebtoken';
 
 export const config = {
   api: {
@@ -14,10 +14,18 @@ export const config = {
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     try {
-      const userId = req.headers['user-id'] as string;
-      
-      if (!userId) {
-        return res.status(401).json({ message: 'Unauthorized: userId missing' });
+      // Verify JWT token authentication
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      if (!token) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+
+      let userId: number;
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
+        userId = decoded.userId;
+      } catch (error) {
+        return res.status(401).json({ message: 'Invalid authentication token' });
       }
 
       const form = formidable({
@@ -40,9 +48,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         });
       });
 
-      if (!userId) {
-        return res.status(401).json({ message: 'Unauthorized: userId missing' });
-      }
 
       // Extract content from form data
       const content = Array.isArray(fields.content) ? fields.content[0] : fields.content;
@@ -97,6 +102,19 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   if (req.method === 'GET') {
+    // Optional authentication for GET requests
+    let userId: number | null = null;
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
+        userId = decoded.userId;
+      } catch (error) {
+        // Invalid token, but continue without userId for public posts
+      }
+    }
+
     const posts = await prisma.post.findMany({
       include: { 
         user: { 
@@ -128,24 +146,32 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           },
           orderBy: { createdAt: 'desc' },
         },
-        postLikes: true,
+        postLikes: userId ? {
+          where: { userId },
+          select: { id: true },
+        } : false,
+        _count: {
+          select: {
+            postLikes: true,
+            comments: true,
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    // Add isLiked field for each post
+    // Add isLiked field and counts for each post
     const postsWithLikes = posts.map(post => ({
       ...post,
-      isLiked: post.postLikes.some(like => like.userId === userId),
-      likesCount: post.postLikes.length,
-      commentsCount: post.comments.length,
+      isLiked: userId ? (post.postLikes && post.postLikes.length > 0) : false,
+      likesCount: post._count.postLikes,
+      commentsCount: post._count.comments,
     }));
 
-    console.log('Posts with likes:', postsWithLikes.map(p => ({ id: p.id, likesCount: p.likesCount, isLiked: p.isLiked })));
     return res.status(200).json(postsWithLikes);
   }
 
   return res.status(405).json({ message: 'Method not allowed' });
 };
 
-export default authMiddleware(handler);
+export default handler;
