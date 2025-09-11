@@ -24,7 +24,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
         userId = decoded.userId;
-      } catch (error) {
+      } catch {
         return res.status(401).json({ message: 'Invalid authentication token' });
       }
 
@@ -110,7 +110,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
         userId = decoded.userId;
-      } catch (error) {
+      } catch {
         // Invalid token, but continue without userId for public posts
       }
     }

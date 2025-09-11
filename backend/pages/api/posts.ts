@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         try {
           const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
           userId = decoded.userId;
-        } catch (error) {
+        } catch {
           // If token is invalid, just continue without userId (public posts)
           console.log('Invalid token for posts listing, continuing without auth');
         }
