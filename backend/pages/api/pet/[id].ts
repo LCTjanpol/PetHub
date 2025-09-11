@@ -98,14 +98,23 @@ const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
         // Handle image field from FormData
         const petPictureField = Array.isArray(fields.petPicture) ? fields.petPicture[0] : fields.petPicture;
         
+        console.log('[PUT /pet/[id]] petPictureField type:', typeof petPictureField);
+        console.log('[PUT /pet/[id]] petPictureField value:', petPictureField);
+        
         if (petPictureField === '') {
           // User removed the image - set to empty string
           newImagePath = '';
           console.log('[PUT /pet/[id]] Image removed by user');
-        } else if (petPictureField && (petPictureField.startsWith('/uploads') || petPictureField.startsWith('http'))) {
+        } else if (typeof petPictureField === 'string' && (petPictureField.startsWith('/uploads') || petPictureField.startsWith('http'))) {
           // Existing server image - keep it unchanged
           newImagePath = petPictureField;
           console.log('[PUT /pet/[id]] 🔒 Keeping existing server image:', petPictureField);
+        } else if (typeof petPictureField === 'object' && petPictureField.uri) {
+          // This is a React Native image object - this indicates a FormData issue
+          // For now, we'll skip the image update and keep the existing image
+          console.log('[PUT /pet/[id]] ⚠️ React Native image object detected in fields - skipping image update');
+          console.log('[PUT /pet/[id]] This is a known limitation with React Native FormData');
+          newImagePath = existingPet.petPicture;
         }
         // If petPictureField is undefined or null, we'll keep the existing image
       }
