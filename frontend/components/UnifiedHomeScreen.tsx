@@ -23,6 +23,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import PostCard from './PostCard';
 import * as ImagePicker from 'expo-image-picker';
+import NotificationService from '../services/NotificationService';
 
 interface Post {
   id: string;
@@ -65,6 +66,9 @@ export default function UnifiedHomeScreen({ currentUserIsShopOwner, currentUserI
   const [newPostContent, setNewPostContent] = useState('');
   const [newPostImage, setNewPostImage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Notification service
+  const notificationService = NotificationService.getInstance();
 
   // Fetch posts from API
   const fetchPosts = useCallback(async () => {
@@ -208,20 +212,33 @@ export default function UnifiedHomeScreen({ currentUserIsShopOwner, currentUserI
       const token = await AsyncStorage.getItem('token');
       if (!token) return;
 
-      await apiClient.post(ENDPOINTS.POST.LIKE(postId), {}, {
+      const response = await apiClient.post(ENDPOINTS.POST.LIKE(postId), {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // Update local state
-      setPosts(prevPosts => 
-        prevPosts.map(post => 
-          post.id === postId 
-            ? { ...post, isLiked: true, likes: (post.likes || 0) + 1 }
-            : post
-        )
-      );
+      if (response.data.success) {
+        // Update local state
+        setPosts(prevPosts => 
+          prevPosts.map(post => {
+            if (post.id === postId) {
+              // Send notification to post owner
+              if (post.userId && currentUserId) {
+                notificationService.addSocialNotification(
+                  'like',
+                  postId,
+                  currentUserId,
+                  'Someone', // You can get current user name from storage
+                  post.userId
+                );
+              }
+              return { ...post, isLiked: true, likes: (post.likes || 0) + 1 };
+            }
+            return post;
+          })
+        );
+      }
     } catch (error) {
-      console.error('Error liking post:', error);
+      // Handle error silently for better UX
     }
   };
 
@@ -263,6 +280,18 @@ export default function UnifiedHomeScreen({ currentUserIsShopOwner, currentUserI
       });
 
       if (response.data.success) {
+        // Send notification to post owner
+        const post = posts.find(p => p.id === postId);
+        if (post && post.userId && currentUserId) {
+          notificationService.addSocialNotification(
+            'comment',
+            postId,
+            currentUserId,
+            'Someone', // You can get current user name from storage
+            post.userId
+          );
+        }
+
         Alert.alert('Success! 🎉', 'Comment added successfully!');
         await fetchPosts(); // Refresh posts to show new comment
       } else {

@@ -766,10 +766,12 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
     zIndex: 1000,
-    maxHeight: 200,
+    maxHeight: 250,
   },
   dropdownList: {
-    maxHeight: 200,
+    maxHeight: 230,
+    flexGrow: 0,
+    flexShrink: 1,
   },
   dropdownItem: {
     paddingHorizontal: 20,

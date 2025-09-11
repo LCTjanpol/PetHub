@@ -264,6 +264,30 @@ export default function PostCard({
               <View style={styles.commentContent}>
                 <Text style={styles.commentUserName}>{comment.userName}</Text>
                 <Text style={styles.commentText}>{comment.content}</Text>
+                <Text style={styles.commentTime}>{formatDate(comment.createdAt)}</Text>
+                
+                {/* Display replies if they exist */}
+                {comment.replies && comment.replies.length > 0 && (
+                  <View style={styles.repliesContainer}>
+                    {comment.replies.map((reply) => (
+                      <View key={reply.id} style={styles.replyItem}>
+                        <Image
+                          source={
+                            reply.userProfilePicture
+                              ? { uri: formatImageUrl(reply.userProfilePicture) || '' }
+                              : require('../assets/images/pet.png')
+                          }
+                          style={styles.replyAvatar}
+                        />
+                        <View style={styles.replyContent}>
+                          <Text style={styles.replyUserName}>{reply.userName}</Text>
+                          <Text style={styles.replyText}>{reply.content}</Text>
+                          <Text style={styles.replyTime}>{formatDate(reply.createdAt)}</Text>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                )}
               </View>
             </View>
           ))}
@@ -543,11 +567,53 @@ const styles = StyleSheet.create({
     color: '#333333',
     lineHeight: 18,
   },
+  commentTime: {
+    fontSize: 10,
+    color: '#999999',
+    marginTop: 2,
+  },
   viewMoreComments: {
     fontSize: 12,
     color: '#4ECDC4',
     fontWeight: '500',
     marginTop: 8,
+  },
+  // Replies styles
+  repliesContainer: {
+    marginTop: 8,
+    marginLeft: 16,
+    paddingLeft: 12,
+    borderLeftWidth: 2,
+    borderLeftColor: '#E0E0E0',
+  },
+  replyItem: {
+    flexDirection: 'row',
+    marginBottom: 6,
+  },
+  replyAvatar: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    marginRight: 6,
+  },
+  replyContent: {
+    flex: 1,
+  },
+  replyUserName: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#0E0F0F',
+    marginBottom: 1,
+  },
+  replyText: {
+    fontSize: 12,
+    color: '#333333',
+    lineHeight: 16,
+  },
+  replyTime: {
+    fontSize: 9,
+    color: '#999999',
+    marginTop: 1,
   },
   // Comment modal styles
   commentModalOverlay: {

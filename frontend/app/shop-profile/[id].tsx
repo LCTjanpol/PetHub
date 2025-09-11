@@ -117,25 +117,23 @@ export default function ShopProfileScreen() {
       } else if (response.data) {
         setShop(response.data);
       } else {
-        console.error('[fetchShopData] Unexpected response structure:', response.data);
-        Alert.alert('Error', 'Failed to load shop data');
+        Alert.alert('Error', 'Unable to load shop information. Please try again.');
       }
     } catch (error: any) {
-      console.error('[fetchShopData] Error:', error.message, error.stack);
+      let errorMessage = 'Unable to load shop information. Please try again.';
       
-      let errorMessage = 'Failed to load shop data. Please try again.';
-      
-      if (error.response?.status === 401) {
-        errorMessage = 'Session expired. Please log in again.';
+      if (error.code === 'NETWORK_ERROR') {
+        errorMessage = 'Network connection issue. Please check your internet connection.';
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Please log in to view shop profiles.';
+        router.replace('/auth/login');
       } else if (error.response?.status === 404) {
-        errorMessage = 'Shop not found.';
+        errorMessage = 'This shop profile could not be found. It may have been removed.';
       } else if (error.response?.status === 500) {
-        errorMessage = 'Server error. Please try again later.';
-      } else if (error.message) {
-        errorMessage = error.message;
+        errorMessage = 'Server error. Please try again in a few moments.';
       }
       
-      Alert.alert('Shop Loading Failed', errorMessage);
+      Alert.alert('Shop Profile Unavailable', errorMessage);
     }
   };
 
@@ -149,26 +147,25 @@ export default function ShopProfileScreen() {
         headers: { Authorization: `Bearer ${token}` },
       });
       
-      console.log('Fetched posts response:', response.data);
-      
       let allPosts: Post[] = [];
       
-      // The backend returns the posts array directly for GET /api/post
+      // Handle different response structures
       if (Array.isArray(response.data)) {
         allPosts = response.data;
       } else if (response.data && Array.isArray(response.data.data)) {
         allPosts = response.data.data;
       } else {
-        console.error('[fetchShopPosts] Unexpected response structure:', response.data);
         setPosts([]);
         return;
       }
 
-      // Filter posts by shopId
-      const shopPosts = allPosts.filter(post => post.shopId === id);
+      // Filter posts by shopId or userId if shop owner
+      const shopPosts = allPosts.filter(post => 
+        post.shopId === id || (post.user?.isShopOwner && post.userId === id)
+      );
       setPosts(shopPosts);
     } catch (error: any) {
-      console.error('[fetchShopPosts] Error:', error.message, error.stack);
+      // Don't show error for posts loading failure, just show empty state
       setPosts([]);
     } finally {
       setLoading(false);
@@ -181,7 +178,7 @@ export default function ShopProfileScreen() {
     try {
       await Promise.all([fetchShopData(), fetchShopPosts()]);
     } catch (error) {
-      console.error('[onRefresh] Error:', error);
+      // Handle refresh errors silently
     } finally {
       setRefreshing(false);
     }

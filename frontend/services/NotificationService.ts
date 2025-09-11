@@ -18,6 +18,17 @@ export interface TaskNotification {
   isPhoneNotification: boolean;
 }
 
+export interface SocialNotification {
+  id: string;
+  type: 'like' | 'comment' | 'reply';
+  postId: string;
+  fromUserId: string;
+  fromUserName: string;
+  message: string;
+  timestamp: string;
+  read: boolean;
+}
+
 export interface OverlayNotification {
   id: string;
   title: string;
@@ -34,6 +45,7 @@ export interface OverlayNotification {
 class NotificationService {
   private static instance: NotificationService;
   private overlayNotifications: OverlayNotification[] = [];
+  private socialNotifications: SocialNotification[] = [];
 
   private constructor() {
     // Initialize notifications asynchronously to avoid blocking
@@ -457,12 +469,117 @@ class NotificationService {
   }
 
   /**
+   * Add social notification (like, comment, reply)
+   */
+  public async addSocialNotification(
+    type: 'like' | 'comment' | 'reply',
+    postId: string,
+    fromUserId: string,
+    fromUserName: string,
+    postOwnerId: string
+  ) {
+    // Don't notify users of their own actions
+    if (fromUserId === postOwnerId) return;
+
+    try {
+      const currentUserId = await this.getCurrentUserId();
+      
+      // Only notify the post owner
+      if (currentUserId !== postOwnerId) return;
+
+      let message = '';
+      switch (type) {
+        case 'like':
+          message = `${fromUserName} liked your post`;
+          break;
+        case 'comment':
+          message = `${fromUserName} commented on your post`;
+          break;
+        case 'reply':
+          message = `${fromUserName} replied to your comment`;
+          break;
+      }
+
+      const notification: SocialNotification = {
+        id: `${type}-${postId}-${fromUserId}-${Date.now()}`,
+        type,
+        postId,
+        fromUserId,
+        fromUserName,
+        message,
+        timestamp: moment().format('YYYY-MM-DD HH:mm:ss'),
+        read: false,
+      };
+
+      this.socialNotifications.unshift(notification);
+
+      // Show overlay notification
+      Alert.alert('New Interaction! 🎉', message, [
+        { text: 'OK', style: 'default' }
+      ]);
+
+      // Vibrate for feedback
+      try {
+        Vibration.vibrate([100, 50, 100]);
+      } catch (error) {
+        // Vibration not available
+      }
+
+    } catch (error) {
+      console.error('Failed to add social notification:', error);
+    }
+  }
+
+  /**
+   * Get current user ID from storage
+   */
+  private async getCurrentUserId(): Promise<string | null> {
+    try {
+      const userData = await AsyncStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        return user.id?.toString() || null;
+      }
+    } catch (error) {
+      console.error('Failed to get current user ID:', error);
+    }
+    return null;
+  }
+
+  /**
+   * Get all social notifications
+   */
+  public getSocialNotifications(): SocialNotification[] {
+    return this.socialNotifications;
+  }
+
+  /**
+   * Mark social notification as read
+   */
+  public markSocialNotificationAsRead(notificationId: string) {
+    this.socialNotifications = this.socialNotifications.map(notification =>
+      notification.id === notificationId
+        ? { ...notification, read: true }
+        : notification
+    );
+  }
+
+  /**
+   * Clear all social notifications
+   */
+  public clearSocialNotifications() {
+    this.socialNotifications = [];
+  }
+
+  /**
    * Get notification statistics
    */
   public getNotificationStats() {
     return {
       activeOverlays: this.overlayNotifications.filter(n => n.isVisible).length,
       totalOverlays: this.overlayNotifications.length,
+      socialNotifications: this.socialNotifications.filter(n => !n.read).length,
+      totalSocialNotifications: this.socialNotifications.length,
       usingExpoGoMode: true,
       notificationsAvailable: false,
     };
