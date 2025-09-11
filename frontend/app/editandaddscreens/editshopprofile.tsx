@@ -170,13 +170,15 @@ export default function EditShopProfileScreen() {
       formData.append('isAvailable', isAvailable.toString());
       formData.append('availableDays', JSON.stringify(selectedDays));
 
-      if (selectedImage && selectedImage !== shopData?.shopImage) {
+      // Handle shop image - only send new images as files
+      if (selectedImage && (selectedImage.startsWith('file://') || selectedImage.startsWith('content://'))) {
         formData.append('shopImage', {
           uri: selectedImage,
           type: 'image/jpeg',
           name: 'shop-image.jpg',
         } as any);
       }
+      // Don't send existing server images - let backend keep existing
 
       const response = await apiClient.put(
         ENDPOINTS.SHOP.PROFILE,

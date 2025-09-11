@@ -153,13 +153,15 @@ export default function EditShopOwnerProfileScreen() {
       formData.append('birthdate', birthdate);
       formData.append('gender', gender);
 
-      if (selectedImage && selectedImage !== userData?.profilePicture) {
-        formData.append('profilePicture', {
+      // Handle profile image - only send new images as files
+      if (selectedImage && (selectedImage.startsWith('file://') || selectedImage.startsWith('content://'))) {
+        formData.append('profileImage', {
           uri: selectedImage,
           type: 'image/jpeg',
           name: 'profile-picture.jpg',
         } as any);
       }
+      // Don't send existing server images - let backend keep existing
 
       const response = await apiClient.put(
         ENDPOINTS.USER.PROFILE,

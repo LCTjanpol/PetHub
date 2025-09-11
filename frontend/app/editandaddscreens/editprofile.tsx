@@ -127,21 +127,16 @@ const EditProfileScreen = () => {
       formData.append('birthdate', user.birthdate || '');
       formData.append('gender', user.gender || '');
       
-      // Handle profile image - always send if there's an image
-      if (profileImage) {
-        // Check if it's a new image (local URI) or existing image
-        if (profileImage.startsWith('file://') || profileImage.startsWith('content://') || profileImage.startsWith('http://localhost')) {
-          // New image selected from gallery/camera
-          formData.append('profileImage', {
-            uri: profileImage,
-            type: 'image/jpeg',
-            name: `profile_${Date.now()}.jpg`,
-          } as any);
-        } else if (profileImage.startsWith('/uploads')) {
-          // Existing image from backend - send the path to keep it
-          formData.append('profileImage', profileImage);
-        }
+      // Handle profile image - only send new images as files (like pet profile)
+      if (profileImage && (profileImage.startsWith('file://') || profileImage.startsWith('content://') || profileImage.startsWith('http://localhost'))) {
+        // New image selected from gallery/camera - send as file
+        formData.append('profileImage', {
+          uri: profileImage,
+          type: 'image/jpeg',
+          name: `profile_${Date.now()}.jpg`,
+        } as any);
       }
+      // Don't send existing server images - let backend keep existing
 
       const response = await apiClient.put(ENDPOINTS.USER.PROFILE, formData, {
         headers: {
