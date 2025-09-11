@@ -1,5 +1,5 @@
 // File: profile.tsx
-// Description: Shop owner's profile screen for editing shop and user profile
+// Description: Shop owner's profile screen with posts, profile management, and enhanced UI
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -10,13 +10,14 @@ import {
   ScrollView,
   Alert,
   StyleSheet,
-  StatusBar
+  StatusBar,
+  RefreshControl,
+  Modal
 } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
-// ImagePicker no longer needed since editing moved to separate screen
 import { apiClient, ENDPOINTS } from '../../config/api';
 import { formatImageUrl } from '../../utils/imageUtils';
-import { formatTimeForDisplay } from '../../utils/timeUtils';
+import { formatTimeForDisplay, formatRelativeTime } from '../../utils/timeUtils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 
@@ -42,11 +43,34 @@ interface UserData {
   gender: string;
 }
 
+interface Post {
+  id: string;
+  content: string;
+  image?: string;
+  createdAt: string;
+  likesCount?: number;
+  likes?: number;
+  comments?: Comment[];
+  userId: string;
+}
+
+interface Comment {
+  id: string;
+  content: string;
+  createdAt: string;
+  user?: {
+    fullName: string;
+  };
+}
+
 export default function ShopOwnerProfileScreen() {
   const [shopData, setShopData] = useState<ShopData | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
+  const [userPosts, setUserPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  // Removed edit modal state since editing is now handled in separate screen
+  const [refreshing, setRefreshing] = useState(false);
+  const [showPostMenu, setShowPostMenu] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -93,6 +117,9 @@ export default function ShopOwnerProfileScreen() {
       }
       
       setUserData(userDataToSet);
+      
+      // Fetch user posts
+      await fetchUserPosts();
     } catch (error: any) {
       console.error('[fetchData] Error:', error.message, error.stack);
       if (error.response?.status === 401) {
@@ -103,6 +130,38 @@ export default function ShopOwnerProfileScreen() {
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Fetch user posts from API
+  const fetchUserPosts = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token || !userData?.id) return;
+
+      const response = await apiClient.get(ENDPOINTS.POST.LIST, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      // Handle different API response structures
+      let postsData = [];
+      if (Array.isArray(response.data)) {
+        postsData = response.data;
+      } else if (response.data && Array.isArray(response.data.data)) {
+        postsData = response.data.data;
+      } else {
+        console.log('[fetchUserPosts] Unexpected response structure:', response.data);
+        setUserPosts([]);
+        return;
+      }
+      
+      // Filter posts by current user
+      const currentUserPosts = postsData.filter((post: Post) => post.userId === userData.id);
+      setUserPosts(currentUserPosts);
+      
+    } catch (error: any) {
+      console.error('[fetchUserPosts] Error:', error.message, error.stack);
+      setUserPosts([]);
     }
   };
 
@@ -117,9 +176,59 @@ export default function ShopOwnerProfileScreen() {
     }
   };
 
-  // Edit functionality moved to separate screen
+  // Handle post deletion
+  const handleDeletePost = async (post: Post) => {
+    setShowPostMenu(false);
+    Alert.alert(
+      'Delete Post',
+      'Are you sure you want to delete this post? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const token = await AsyncStorage.getItem('token');
+              if (!token) {
+                Alert.alert('Error', 'Authentication token not found. Please log in again.');
+                return;
+              }
 
-  // Edit functionality moved to separate screen
+              await apiClient.delete(ENDPOINTS.POST.DELETE(post.id), {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              
+              // Refresh posts after deletion
+              fetchUserPosts();
+              Alert.alert('Success', 'Post deleted successfully');
+            } catch (error: any) {
+              console.error('[handleDeletePost] Error:', error.message, error.stack);
+              Alert.alert('Error', 'Failed to delete post. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // Open post menu modal
+  const openPostMenu = (post: Post) => {
+    setSelectedPost(post);
+    setShowPostMenu(true);
+  };
+
+  // Handle pull-to-refresh
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await fetchData();
+    } catch (error) {
+      console.error('[onRefresh] Error:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   // Using the new time utility function
   const formatTime = (time: string | null | undefined) => formatTimeForDisplay(time || '');
@@ -150,7 +259,12 @@ export default function ShopOwnerProfileScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F5F5F5" translucent />
       
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Profile</Text>
@@ -190,7 +304,7 @@ export default function ShopOwnerProfileScreen() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Shop Profile</Text>
             <TouchableOpacity
-              onPress={() => router.push('/editandaddscreens/editshopprofile')}
+              onPress={() => router.push('/shopedit/editshop')}
               style={styles.editButton}
             >
               <FontAwesome5 name="store" size={16} color="#0E0F0F" />
@@ -260,6 +374,70 @@ export default function ShopOwnerProfileScreen() {
           </View>
         </View>
 
+        {/* Posts Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>My Posts</Text>
+            <Text style={styles.postsCount}>{userPosts.length} posts</Text>
+          </View>
+          
+          {userPosts.length > 0 ? (
+            userPosts.map((post: Post) => (
+              <View key={post.id} style={styles.postCard}>
+                <View style={styles.postHeader}>
+                  <Image
+                    source={
+                      userData.profilePicture
+                        ? { uri: formatImageUrl(userData.profilePicture) || '' }
+                        : require('../../assets/images/pet.png')
+                    }
+                    style={styles.postProfilePicture}
+                  />
+                  <View style={styles.postUserInfo}>
+                    <Text style={styles.postUserName}>{userData.fullName || 'User'}</Text>
+                    <Text style={styles.postTime}>{formatRelativeTime(post.createdAt)}</Text>
+                  </View>
+                  <TouchableOpacity 
+                    style={styles.postMenuButton}
+                    onPress={() => openPostMenu(post)}
+                  >
+                    <FontAwesome5 name="ellipsis-v" size={16} color="#666666" />
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.postContent}>{post.content}</Text>
+                
+                {/* Post Image */}
+                {post.image && (
+                  <View style={styles.postImageContainer}>
+                    <Image
+                      source={{ uri: formatImageUrl(post.image) || '' }}
+                      style={styles.postImage}
+                      resizeMode="cover"
+                    />
+                  </View>
+                )}
+                
+                <View style={styles.postActions}>
+                  <View style={styles.postAction}>
+                    <FontAwesome5 name="heart" size={14} color="#FF6B6B" />
+                    <Text style={styles.actionText}>{post.likesCount || post.likes || 0}</Text>
+                  </View>
+                  <View style={styles.postAction}>
+                    <FontAwesome5 name="comment" size={14} color="#4ECDC4" />
+                    <Text style={styles.actionText}>{post.comments?.length || 0}</Text>
+                  </View>
+                </View>
+              </View>
+            ))
+          ) : (
+            <View style={styles.noPostsContainer}>
+              <FontAwesome5 name="edit" size={48} color="#CCCCCC" />
+              <Text style={styles.noPostsText}>No posts yet</Text>
+              <Text style={styles.noPostsSubtext}>Share updates about your shop to get started</Text>
+            </View>
+          )}
+        </View>
+
         {/* Logout Button */}
         <View style={styles.logoutSection}>
           <TouchableOpacity
@@ -272,7 +450,29 @@ export default function ShopOwnerProfileScreen() {
         </View>
       </ScrollView>
 
-      {/* Edit functionality moved to separate screen */}
+      {/* Post Menu Modal */}
+      <Modal
+        visible={showPostMenu}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowPostMenu(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowPostMenu(false)}
+        >
+          <View style={styles.menuContainer}>
+            <TouchableOpacity 
+              style={styles.menuItem}
+              onPress={() => selectedPost && handleDeletePost(selectedPost)}
+            >
+              <FontAwesome5 name="trash" size={16} color="#FF4757" />
+              <Text style={[styles.menuText, styles.deleteText]}>Delete Post</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -344,6 +544,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#0E0F0F',
+  },
+  postsCount: {
+    fontSize: 14,
+    color: '#666666',
+    fontWeight: '500',
   },
   editButton: {
     flexDirection: 'row',
@@ -445,10 +650,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666666',
     marginBottom: 5,
+    marginLeft: 5,
   },
   shopContact: {
     fontSize: 14,
     color: '#666666',
+    marginLeft: 5,
   },
   shopDetails: {
     borderTopWidth: 1,
@@ -485,9 +692,92 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginRight: 5,
   },
-  statusText: {
-    fontSize: 14,
+  // Post styles
+  postCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  postHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  postProfilePicture: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12,
+    backgroundColor: '#E0E0E0',
+  },
+  postUserInfo: {
+    flex: 1,
+  },
+  postUserName: {
+    fontSize: 16,
+    fontWeight: '600',
     color: '#0E0F0F',
+    marginBottom: 2,
+  },
+  postTime: {
+    fontSize: 12,
+    color: '#666666',
+  },
+  postMenuButton: {
+    padding: 4,
+  },
+  postContent: {
+    fontSize: 16,
+    color: '#0E0F0F',
+    lineHeight: 22,
+    marginBottom: 12,
+  },
+  postImageContainer: {
+    marginBottom: 12,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  postImage: {
+    width: '100%',
+    height: 200,
+    backgroundColor: '#F5F5F5',
+  },
+  postActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  postAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 20,
+  },
+  actionText: {
+    fontSize: 14,
+    color: '#666666',
+    marginLeft: 5,
+  },
+  noPostsContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  noPostsText: {
+    fontSize: 16,
+    color: '#666666',
+    marginTop: 10,
+    fontWeight: '500',
+  },
+  noPostsSubtext: {
+    fontSize: 14,
+    color: '#999999',
+    marginTop: 5,
+    textAlign: 'center',
   },
   logoutSection: {
     padding: 20,
@@ -511,5 +801,37 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 8,
   },
-  // Modal styles removed since editing moved to separate screen
-}); 
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  menuContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 8,
+    minWidth: 200,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  menuText: {
+    fontSize: 16,
+    color: '#0E0F0F',
+    marginLeft: 12,
+  },
+  deleteText: {
+    color: '#FF4757',
+  },
+});

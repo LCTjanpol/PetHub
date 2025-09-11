@@ -28,6 +28,7 @@ interface User {
 interface Post {
   id: string;
   content: string;
+  image?: string;
   createdAt: string;
   likesCount?: number;
   likes?: number;
@@ -354,6 +355,18 @@ const Profile = () => {
                   </TouchableOpacity>
                 </View>
                 <Text style={styles.postContent}>{post.content}</Text>
+                
+                {/* Post Image */}
+                {post.image && (
+                  <View style={styles.postImageContainer}>
+                    <Image
+                      source={{ uri: formatImageUrl(post.image) || '' }}
+                      style={styles.postImage}
+                      resizeMode="cover"
+                    />
+                  </View>
+                )}
+                
                 <View style={styles.postActions}>
                   <View style={styles.postAction}>
                     <Image source={require('../../assets/icons/heart.png')} style={styles.actionIcon} />
@@ -450,16 +463,6 @@ const Profile = () => {
           onPress={() => setShowPostMenu(false)}
         >
           <View style={styles.menuContainer}>
-            <TouchableOpacity 
-              style={styles.menuItem}
-              onPress={() => selectedPost && handleEditPost(selectedPost)}
-            >
-              <Image source={require('../../assets/icons/edit.png')} style={styles.modalMenuIcon} />
-              <Text style={styles.menuText}>Edit</Text>
-            </TouchableOpacity>
-            
-            <View style={styles.menuDivider} />
-            
             <TouchableOpacity 
               style={styles.menuItem}
               onPress={() => selectedPost && handleDeletePost(selectedPost)}
@@ -598,6 +601,16 @@ const styles = StyleSheet.create({
     color: '#000000',
     lineHeight: 22,
     marginBottom: 12,
+  },
+  postImageContainer: {
+    marginBottom: 12,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  postImage: {
+    width: '100%',
+    height: 200,
+    backgroundColor: '#F5F5F5',
   },
   postActions: {
     flexDirection: 'row',
