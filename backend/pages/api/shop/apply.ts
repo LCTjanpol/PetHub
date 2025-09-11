@@ -46,15 +46,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     // Extract form data with proper array handling
-    const shopName = Array.isArray(fields.shopName) ? fields.shopName[0] : fields.shopName as string;
-    const shopLocation = Array.isArray(fields.shopLocation) ? fields.shopLocation[0] : fields.shopLocation as string;
-    const bio = Array.isArray(fields.bio) ? fields.bio[0] : fields.bio as string;
-    const contactNumber = Array.isArray(fields.contactNumber) ? fields.contactNumber[0] : fields.contactNumber as string;
-    const shopMessage = Array.isArray(fields.shopMessage) ? fields.shopMessage[0] : fields.shopMessage as string;
-    const shopType = Array.isArray(fields.shopType) ? fields.shopType[0] : fields.shopType as string;
-    const openingTime = Array.isArray(fields.openingTime) ? fields.openingTime[0] : fields.openingTime as string;
-    const closingTime = Array.isArray(fields.closingTime) ? fields.closingTime[0] : fields.closingTime as string;
-    const availableDays = Array.isArray(fields.availableDays) ? fields.availableDays[0] : fields.availableDays as string;
+    const shopName = Array.isArray(fields.shopName) ? fields.shopName[0] : (fields.shopName as string) || '';
+    const shopLocation = Array.isArray(fields.shopLocation) ? fields.shopLocation[0] : (fields.shopLocation as string) || '';
+    const bio = Array.isArray(fields.bio) ? fields.bio[0] : (fields.bio as string) || '';
+    const contactNumber = Array.isArray(fields.contactNumber) ? fields.contactNumber[0] : (fields.contactNumber as string) || '';
+    const shopMessage = Array.isArray(fields.shopMessage) ? fields.shopMessage[0] : (fields.shopMessage as string) || '';
+    const shopType = Array.isArray(fields.shopType) ? fields.shopType[0] : (fields.shopType as string) || '';
+    const openingTime = Array.isArray(fields.openingTime) ? fields.openingTime[0] : (fields.openingTime as string) || '';
+    const closingTime = Array.isArray(fields.closingTime) ? fields.closingTime[0] : (fields.closingTime as string) || '';
+    const availableDays = Array.isArray(fields.availableDays) ? fields.availableDays[0] : (fields.availableDays as string) || '';
     const isAvailable = Array.isArray(fields.isAvailable) ? fields.isAvailable[0] === 'true' : fields.isAvailable === 'true';
     
     // Extract coordinates for map pinning
