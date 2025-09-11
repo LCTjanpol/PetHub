@@ -228,8 +228,7 @@ The application uses the following main entities:
 
 ### Backend Deployment
 - **Vercel**: Recommended for Next.js applications
-- **Railway**: Alternative with PostgreSQL support
-- **Heroku**: Traditional hosting option
+- **Supabase**: Database Hosting
 
 ### Frontend Deployment
 - **Expo Application Services (EAS)**: Official Expo deployment
