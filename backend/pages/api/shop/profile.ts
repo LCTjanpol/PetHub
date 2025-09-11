@@ -2,13 +2,11 @@
 // Description: API endpoint for shop profile management
 
 import { NextApiRequest, NextApiResponse } from 'next';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../../lib/prisma';
 import jwt from 'jsonwebtoken';
 import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';
-
-const prisma = new PrismaClient();
 
 export const config = {
   api: {
