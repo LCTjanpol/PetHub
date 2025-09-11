@@ -6,6 +6,10 @@ import type { AuthenticatedRequest } from '../../../types/next';
 const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
   const userId = req.user?.userId;
 
+  if (!userId) {
+    return res.status(401).json({ message: 'Authentication required' });
+  }
+
   if (req.method === 'POST') {
     const { petId, vaccineName, date, expirationDate } = req.body;
     const record = await prisma.vaccinationRecord.create({

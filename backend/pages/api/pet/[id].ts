@@ -16,6 +16,10 @@ const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
   const userId = req.user?.userId;
   const petId = parseInt(req.query.id as string);
 
+  if (!userId) {
+    return res.status(401).json({ message: 'Authentication required' });
+  }
+
   if (req.method === 'PUT') {
     try {
       console.log('[PUT /pet/[id]] Updating pet with ID:', petId);
