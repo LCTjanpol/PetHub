@@ -220,7 +220,7 @@ const EditProfileScreen = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4ECDC4" />
+        <ActivityIndicator size="large" color="#0E0F0F" />
         <Text style={styles.loadingText}>Loading profile...</Text>
       </View>
     );
