@@ -90,12 +90,12 @@ const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({ onAnimationComp
       dotsAnimation.start();
     });
 
-    // Auto-hide after 3 seconds
+    // Auto-hide after 2 seconds
     const timer = setTimeout(() => {
       if (onAnimationComplete) {
         onAnimationComplete();
       }
-    }, 3000);
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, [fadeAnim, logoScaleAnim, textFadeAnim, dot1Anim, dot2Anim, dot3Anim, onAnimationComplete]);
@@ -114,19 +114,17 @@ const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({ onAnimationComp
       >
         {/* Logo */}
         <Animated.View style={{ transform: [{ scale: logoScaleAnim }] }}>
-          <View style={styles.logoContainer}>
-            <Image
-              source={require('../assets/images/logo.png')}
-              style={styles.logo}
-              resizeMode="contain"
-              onError={(error) => {
-                console.log('Logo loading error:', error.nativeEvent.error);
-              }}
-              onLoad={() => {
-                console.log('Logo loaded successfully');
-              }}
-            />
-          </View>
+          <Image
+            source={require('../assets/images/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+            onError={(error) => {
+              console.log('Logo loading error:', error.nativeEvent.error);
+            }}
+            onLoad={() => {
+              console.log('Logo loaded successfully');
+            }}
+          />
         </Animated.View>
 
         {/* App Name */}
@@ -158,16 +156,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  logoContainer: {
-    width: 180,
-    height: 180,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 40,
-  },
   logo: {
-    width: 120,
-    height: 120,
+    width: 200,
+    height: 200,
+    marginBottom: 40,
   },
   appName: {
     fontSize: 36,

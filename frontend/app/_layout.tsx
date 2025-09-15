@@ -85,17 +85,25 @@ export default function RootLayout() {
   };
 
   // Show splash screen while fonts are loading or app is initializing
-  if (!loaded || !isAppReady || showSplash) {
-    console.log('Showing splash screen - loaded:', loaded, 'isAppReady:', isAppReady, 'showSplash:', showSplash);
+  if (!loaded || !isAppReady) {
+    console.log('Showing splash screen - loaded:', loaded, 'isAppReady:', isAppReady);
     return (
       <CustomSplashScreen 
         onAnimationComplete={() => {
-          console.log('Splash screen animation complete');
-          // Only hide splash screen if app is ready
-          if (loaded && isAppReady) {
-            console.log('Hiding splash screen');
-            setShowSplash(false);
-          }
+          console.log('Splash screen animation complete - app not ready yet');
+        }} 
+      />
+    );
+  }
+
+  // Show splash screen for a brief moment after app is ready
+  if (showSplash) {
+    console.log('Showing splash screen - showSplash:', showSplash);
+    return (
+      <CustomSplashScreen 
+        onAnimationComplete={() => {
+          console.log('Splash screen animation complete - hiding splash');
+          setShowSplash(false);
         }} 
       />
     );
