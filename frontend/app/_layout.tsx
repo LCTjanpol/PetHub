@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import 'react-native-reanimated';
 import GlobalNotificationManager from '../components/GlobalNotificationManager';
 import ShopApprovalNotification from '../components/ShopApprovalNotification';
+import CustomSplashScreen from '../components/CustomSplashScreen';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 
@@ -16,6 +17,8 @@ export default function RootLayout() {
   });
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [showSplash, setShowSplash] = useState(true);
+  const [isAppReady, setIsAppReady] = useState(false);
   const router = useRouter();
 
   // Check authentication status on app startup
@@ -46,6 +49,9 @@ export default function RootLayout() {
         console.error('Error checking auth status:', error);
         setIsAuthenticated(false);
         // Don't force navigation to index - let the user see the landing page
+      } finally {
+        // Mark app as ready after auth check
+        setIsAppReady(true);
       }
     };
 
@@ -68,8 +74,15 @@ export default function RootLayout() {
     }
   };
 
-  if (!loaded) {
-    return null;
+  // Show splash screen while fonts are loading or app is initializing
+  if (!loaded || !isAppReady || showSplash) {
+    return (
+      <CustomSplashScreen 
+        onAnimationComplete={() => {
+          setShowSplash(false);
+        }} 
+      />
+    );
   }
 
   // Force light theme

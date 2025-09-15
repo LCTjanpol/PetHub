@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import LoadingSpinner from './LoadingSpinner';
 
 const { width, height } = Dimensions.get('window');
 
@@ -23,7 +24,6 @@ interface CustomSplashScreenProps {
 const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({ onAnimationComplete }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
@@ -48,14 +48,6 @@ const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({ onAnimationComp
         duration: 1200,
         useNativeDriver: true,
       }),
-      // Rotation animation for loading indicator
-      Animated.loop(
-        Animated.timing(rotateAnim, {
-          toValue: 1,
-          duration: 2000,
-          useNativeDriver: true,
-        })
-      ),
       // Pulse animation for logo
       Animated.loop(
         Animated.sequence([
@@ -84,12 +76,7 @@ const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({ onAnimationComp
     }, 3500);
 
     return () => clearTimeout(timer);
-  }, [fadeAnim, scaleAnim, rotateAnim, slideAnim, pulseAnim, onAnimationComplete]);
-
-  const spin = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
+  }, [fadeAnim, scaleAnim, slideAnim, pulseAnim, onAnimationComplete]);
 
   return (
     <LinearGradient
@@ -131,10 +118,7 @@ const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({ onAnimationComp
 
         {/* Loading Indicator */}
         <View style={styles.loadingContainer}>
-          <Animated.View style={[styles.loadingIcon, { transform: [{ rotate: spin }] }]}>
-            <FontAwesome5 name="paw" size={20} color="#0E0F0F" />
-          </Animated.View>
-          <Text style={styles.loadingText}>Loading...</Text>
+          <LoadingSpinner size={20} color="#0E0F0F" text="Loading..." />
         </View>
 
         {/* Version Info */}
@@ -196,7 +180,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   loadingContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 48,
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
@@ -211,14 +194,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-  },
-  loadingIcon: {
-    marginRight: 12,
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#0E0F0F',
-    fontWeight: '600',
   },
   versionContainer: {
     alignItems: 'center',

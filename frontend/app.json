@@ -4,39 +4,35 @@
     "slug": "pethub",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/logo.png",
-    "scheme": "pethub",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "icon": "./assets/images/adaptive-icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/images/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F5F5F5"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true
     },
     "android": {
+      "package": "com.janpol.pethub",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/logo.png",
+        "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#F5F5F5"
-      },
-      "edgeToEdgeEnabled": true
+      }
     },
     "web": {
-      "bundler": "metro",
-      "output": "static",
       "favicon": "./assets/images/logo.png"
     },
-    "plugins": [
-      "expo-router",
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/images/logo.png",
-          "imageWidth": 250,
-          "resizeMode": "contain",
-          "backgroundColor": "#F5F5F5"
-        }
-      ]
-    ],
-    "experiments": {
-      "typedRoutes": true
+    "plugins": [],
+    "extra": {
+      "eas": {
+        "projectId": "1f1bc088-2cf8-4bbd-9e56-7b77f63894a9"
+      }
     }
   }
 }
