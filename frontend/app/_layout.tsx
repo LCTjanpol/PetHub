@@ -43,12 +43,14 @@ export default function RootLayout() {
           }
         } else {
           setIsAuthenticated(false);
-          // Don't force navigation to index - let the user see the landing page
+          // Route to landing page for unauthenticated users
+          router.replace('/');
         }
       } catch (error) {
         console.error('Error checking auth status:', error);
         setIsAuthenticated(false);
-        // Don't force navigation to index - let the user see the landing page
+        // Route to landing page on error
+        router.replace('/');
       } finally {
         // Mark app as ready after auth check
         setIsAppReady(true);
@@ -75,7 +77,18 @@ export default function RootLayout() {
   };
 
   // Show splash screen while fonts are loading or app is initializing
-  if (!loaded || !isAppReady || showSplash) {
+  if (!loaded || !isAppReady) {
+    return (
+      <CustomSplashScreen 
+        onAnimationComplete={() => {
+          // Don't set showSplash to false here, let the app continue
+        }} 
+      />
+    );
+  }
+
+  // Show splash screen for a brief moment after app is ready
+  if (showSplash) {
     return (
       <CustomSplashScreen 
         onAnimationComplete={() => {
