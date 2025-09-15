@@ -25,14 +25,19 @@ export default function RootLayout() {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
+        console.log('Checking authentication status...');
         const token = await AsyncStorage.getItem('token');
         const userData = await AsyncStorage.getItem('user');
+        
+        console.log('Token exists:', !!token);
+        console.log('User data exists:', !!userData);
         
         if (token && userData) {
           const user = JSON.parse(userData);
           setIsAuthenticated(true);
           setUserRole(user.isAdmin ? 'admin' : user.isShopOwner ? 'shop' : 'user');
           
+          console.log('User authenticated, routing to appropriate screen...');
           // Route to appropriate screen based on user role
           if (user.isAdmin) {
             router.replace('/admin/dashboard');
@@ -43,16 +48,19 @@ export default function RootLayout() {
           }
         } else {
           setIsAuthenticated(false);
+          console.log('User not authenticated, routing to landing page...');
           // Route to landing page for unauthenticated users
           router.replace('/');
         }
       } catch (error) {
         console.error('Error checking auth status:', error);
         setIsAuthenticated(false);
+        console.log('Error occurred, routing to landing page...');
         // Route to landing page on error
         router.replace('/');
       } finally {
         // Mark app as ready after auth check
+        console.log('App is ready, setting isAppReady to true');
         setIsAppReady(true);
       }
     };
@@ -77,26 +85,23 @@ export default function RootLayout() {
   };
 
   // Show splash screen while fonts are loading or app is initializing
-  if (!loaded || !isAppReady) {
+  if (!loaded || !isAppReady || showSplash) {
+    console.log('Showing splash screen - loaded:', loaded, 'isAppReady:', isAppReady, 'showSplash:', showSplash);
     return (
       <CustomSplashScreen 
         onAnimationComplete={() => {
-          // Don't set showSplash to false here, let the app continue
+          console.log('Splash screen animation complete');
+          // Only hide splash screen if app is ready
+          if (loaded && isAppReady) {
+            console.log('Hiding splash screen');
+            setShowSplash(false);
+          }
         }} 
       />
     );
   }
 
-  // Show splash screen for a brief moment after app is ready
-  if (showSplash) {
-    return (
-      <CustomSplashScreen 
-        onAnimationComplete={() => {
-          setShowSplash(false);
-        }} 
-      />
-    );
-  }
+  console.log('Rendering main app');
 
   // Force light theme
   return (

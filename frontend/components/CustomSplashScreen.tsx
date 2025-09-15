@@ -119,6 +119,12 @@ const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({ onAnimationComp
               source={require('../assets/images/logo.png')}
               style={styles.logo}
               resizeMode="contain"
+              onError={(error) => {
+                console.log('Logo loading error:', error.nativeEvent.error);
+              }}
+              onLoad={() => {
+                console.log('Logo loaded successfully');
+              }}
             />
           </View>
         </Animated.View>
@@ -155,19 +161,9 @@ const styles = StyleSheet.create({
   logoContainer: {
     width: 180,
     height: 180,
-    borderRadius: 90,
-    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 40,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
   },
   logo: {
     width: 120,
