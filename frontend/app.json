@@ -10,7 +10,7 @@
       "image": "./assets/images/logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#FFFFFF"
-    },
+    },  
     "assetBundlePatterns": [
       "**/*"
     ],
