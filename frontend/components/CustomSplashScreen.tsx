@@ -1,5 +1,5 @@
 // File: CustomSplashScreen.tsx
-// Description: Modern custom splash screen component for PetHub app with animated logo and loading indicator
+// Description: Modern custom splash screen component for PetHub app with clean design and animated loading dots
 
 import React, { useEffect, useRef } from 'react';
 import {
@@ -11,9 +11,6 @@ import {
   Dimensions,
   StatusBar,
 } from 'react-native';
-import { FontAwesome5 } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import LoadingSpinner from './LoadingSpinner';
 
 const { width, height } = Dimensions.get('window');
 
@@ -23,84 +20,100 @@ interface CustomSplashScreenProps {
 
 const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({ onAnimationComplete }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const logoScaleAnim = useRef(new Animated.Value(0.8)).current;
+  const textFadeAnim = useRef(new Animated.Value(0)).current;
+  const dot1Anim = useRef(new Animated.Value(0.3)).current;
+  const dot2Anim = useRef(new Animated.Value(0.3)).current;
+  const dot3Anim = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
-    // Create animation sequence
-    const animationSequence = Animated.parallel([
-      // Fade in animation
+    // Initial fade in animation
+    const initialAnimation = Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 1200,
+        duration: 800,
         useNativeDriver: true,
       }),
-      // Scale animation
-      Animated.timing(scaleAnim, {
+      Animated.timing(logoScaleAnim, {
         toValue: 1,
-        duration: 1200,
+        duration: 800,
         useNativeDriver: true,
       }),
-      // Slide up animation
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 1200,
-        useNativeDriver: true,
-      }),
-      // Pulse animation for logo
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 1.1,
-            duration: 1500,
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseAnim, {
-            toValue: 1,
-            duration: 1500,
-            useNativeDriver: true,
-          }),
-        ])
-      ),
     ]);
 
-    // Start animations
-    animationSequence.start();
+    // Text fade in after logo
+    const textAnimation = Animated.timing(textFadeAnim, {
+      toValue: 1,
+      duration: 600,
+      useNativeDriver: true,
+    });
 
-    // Auto-hide after 3.5 seconds
+    // Loading dots animation
+    const dotsAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(dot1Anim, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.timing(dot2Anim, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.timing(dot3Anim, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.timing(dot1Anim, {
+          toValue: 0.3,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.timing(dot2Anim, {
+          toValue: 0.3,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.timing(dot3Anim, {
+          toValue: 0.3,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    // Start animation sequence
+    initialAnimation.start(() => {
+      textAnimation.start();
+      dotsAnimation.start();
+    });
+
+    // Auto-hide after 3 seconds
     const timer = setTimeout(() => {
       if (onAnimationComplete) {
         onAnimationComplete();
       }
-    }, 3500);
+    }, 3000);
 
     return () => clearTimeout(timer);
-  }, [fadeAnim, scaleAnim, slideAnim, pulseAnim, onAnimationComplete]);
+  }, [fadeAnim, logoScaleAnim, textFadeAnim, dot1Anim, dot2Anim, dot3Anim, onAnimationComplete]);
 
   return (
-    <LinearGradient
-      colors={['#F8F9FA', '#E9ECEF', '#DEE2E6']}
-      style={styles.container}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-    >
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent />
       
       <Animated.View
         style={[
           styles.content,
           {
             opacity: fadeAnim,
-            transform: [
-              { scale: scaleAnim },
-              { translateY: slideAnim },
-            ],
           },
         ]}
       >
-        {/* Logo with pulse animation */}
-        <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+        {/* Logo */}
+        <Animated.View style={{ transform: [{ scale: logoScaleAnim }] }}>
           <View style={styles.logoContainer}>
             <Image
               source={require('../assets/images/logo.png')}
@@ -111,29 +124,27 @@ const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({ onAnimationComp
         </Animated.View>
 
         {/* App Name */}
-        <Text style={styles.appName}>PetHub</Text>
+        <Animated.Text style={[styles.appName, { opacity: textFadeAnim }]}>
+          PetHub
+        </Animated.Text>
         
-        {/* Tagline */}
-        <Text style={styles.tagline}>Your Pet's Best Friend</Text>
-
-        {/* Loading Indicator */}
-        <View style={styles.loadingContainer}>
-          <LoadingSpinner size={20} color="#0E0F0F" text="Loading..." />
-        </View>
-
-        {/* Version Info */}
-        <View style={styles.versionContainer}>
-          <Text style={styles.versionText}>Version 1.0.0</Text>
-          <Text style={styles.copyrightText}>© 2024 PetHub Capstone</Text>
-        </View>
+        {/* Loading Dots */}
+        <Animated.View style={[styles.loadingContainer, { opacity: textFadeAnim }]}>
+          <View style={styles.dotsContainer}>
+            <Animated.View style={[styles.dot, { opacity: dot1Anim }]} />
+            <Animated.View style={[styles.dot, { opacity: dot2Anim }]} />
+            <Animated.View style={[styles.dot, { opacity: dot3Anim }]} />
+          </View>
+        </Animated.View>
       </Animated.View>
-    </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -142,74 +153,49 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logoContainer: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 40,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 4,
     },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
-    marginBottom: 24,
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   logo: {
-    width: 140,
-    height: 140,
+    width: 120,
+    height: 120,
   },
   appName: {
-    fontSize: 42,
-    fontWeight: '800',
-    color: '#0E0F0F',
-    marginBottom: 8,
-    letterSpacing: 2,
-    textShadowColor: 'rgba(0, 0, 0, 0.1)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-  },
-  tagline: {
-    fontSize: 18,
-    color: '#666666',
-    marginBottom: 48,
-    fontWeight: '600',
-    letterSpacing: 0.5,
+    fontSize: 36,
+    fontWeight: '700',
+    color: '#1A1A1A',
+    marginBottom: 60,
+    letterSpacing: 1,
+    fontFamily: 'serif',
   },
   loadingContainer: {
     alignItems: 'center',
-    marginBottom: 48,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 25,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    justifyContent: 'center',
   },
-  versionContainer: {
+  dotsContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    position: 'absolute',
-    bottom: 60,
+    justifyContent: 'center',
   },
-  versionText: {
-    fontSize: 14,
-    color: '#888888',
-    marginBottom: 4,
-    fontWeight: '500',
-  },
-  copyrightText: {
-    fontSize: 12,
-    color: '#888888',
-    fontWeight: '400',
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#1A1A1A',
+    marginHorizontal: 4,
   },
 });
 
